@@ -17,12 +17,14 @@ Vec3d DirectionalLight::shadowAttenuation(const ray& r, const Vec3d& p) const
   // You should implement shadow-handling code here.
 
   // Lighting model equation: http://www.cs.utexas.edu/~fussell/courses/cs354/assignments/raytracing/equations.pdf
-  ray point_to_light(p, getDirection(p));
+  ray point_to_light(p, -orientation,  ray::SHADOW);
   isect intersect_info;
 
-  // See if the ray from the point to the light intersects with any object
+  // See if the ray from the point to the light intersects with any object, if it doesn't then just return the light color
   if (scene->intersect(point_to_light, intersect_info))
-  {  
+  {
+    // We have an intersection
+      
   }
   else
     return color;
@@ -50,10 +52,10 @@ double PointLight::distanceAttenuation(const Vec3d& P) const
 
   // Base on slide 19: http://www.cs.utexas.edu/~fussell/courses/cs354/lectures/lecture10.pdf
   double distance = (P - position).length();
-  double dropoff_coeff = 1.0 / (constantTerm + (linearTerm * distance) + (quadraticeTerm * distance * distance));
+  double attenuation = 1.0 / (constantTerm + (linearTerm * distance) + (quadraticeTerm * distance * distance));
 
   // Light intensity should only get weaker or stay the same
-  return min(1.0, dropoff_coeff);
+  return min(1.0, attenuation);
 }
 
 Vec3d PointLight::getColor() const

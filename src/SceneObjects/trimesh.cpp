@@ -130,9 +130,9 @@ bool TrimeshFace::intersectLocal(ray& r, isect& i) const
         return false;
 
     // Compute barycentric coordinates of intersection point
-    double alpha = ((u_dot_v * w_dot_v) - (v_dot_v * w_dot_u)) / bary_denom;
-    double beta = ((u_dot_v * w_dot_u) - (u_dot_u * w_dot_v)) / bary_denom;
-    double gamma = 1.0 - (alpha + beta);
+    double beta = ((u_dot_v * w_dot_v) - (v_dot_v * w_dot_u)) / bary_denom;
+    double gamma = ((u_dot_v * w_dot_u) - (u_dot_u * w_dot_v)) / bary_denom;
+    double alpha = 1.0 - (alpha + beta);
 
     // If any of the barycentric coordinates are less than 0 then we did not intersect the triangle
     if (alpha < 0.0 || beta < 0.0 || gamma < 0.0)
@@ -153,7 +153,7 @@ bool TrimeshFace::intersectLocal(ray& r, isect& i) const
         const Vec3d& nc = parent->normals[ids[2]];
 
         // Barycentric interpolation is some cool shit
-        i.N = ((na * alpha) + (nb * beta) + (nc * gamma)).normalize(); 
+        i.N = ((alpha * na) + (beta * nb) + (gamma * nc)).normalize(); 
     }
     else
         i.N = normal.normalize();

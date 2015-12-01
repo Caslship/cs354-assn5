@@ -139,11 +139,15 @@ bool TrimeshFace::intersectLocal(ray& r, isect& i) const
         return false;
 
     // We have an intersection!
-    // Set t value and barycentric coordinates
+    // Set t value, barycentric coordinates, uv coordinates, intersected object pointer, and material pointer
     i.t = t;
     i.bary[0] = alpha;
     i.bary[1] = beta;
     i.bary[2] = gamma;
+    i.uv[0] = beta;
+    i.uv[1] = gamma;
+    i.obj = this;
+    i.material = parent->getMaterial();
 
     // Interpolate vertex normals to find normal at point or just take surface normal
     if (parent->vertNorms)

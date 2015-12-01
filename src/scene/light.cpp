@@ -17,14 +17,27 @@ Vec3d DirectionalLight::shadowAttenuation(const ray& r, const Vec3d& p) const
   // You should implement shadow-handling code here.
 
   // Lighting model equation: http://www.cs.utexas.edu/~fussell/courses/cs354/assignments/raytracing/equations.pdf
-  ray point_to_light(p, -orientation,  ray::SHADOW);
+  ray point_to_light(p, -orientation, ray::SHADOW);
   isect intersect_info;
 
   // See if the ray from the point to the light intersects with any object, if it doesn't then just return the light color
   if (scene->intersect(point_to_light, intersect_info))
   {
-    // We have an intersection
-      
+    // Grab the point of intersection
+    Vec3d q = point_to_light.at(intersect_info.t);
+
+    // Grab transmissive material property
+    Vec3d kt = intersect_info.material->kt(intersect_info);
+
+    // Find length between p and q to use for dropoff of shadow color (only useful whenever we have a transparent object and treat q as a new point light source)
+    double distance_pq = (p - q).length();
+    double attenuation = min(1.0, 1.0 / (1.0 + (0.1 * distance_pq) + (0.01 * distance_pq * distance_pq)));
+
+    // We might intersect with another object using the ray from q to the light source
+    Vec3d intensity_at_q = shadowAttenuation(r, q);
+
+    // Return the componenet-wise multiplication of transmissive material property and color at q and then scale it with dropoff coefficient
+    return prod(intensity_at_q, kt) * attenuation;
   }
   else
     return color;
@@ -77,13 +90,32 @@ Vec3d PointLight::shadowAttenuation(const ray& r, const Vec3d& p) const
   // You should implement shadow-handling code here.
 
   // Lighting model equation: http://www.cs.utexas.edu/~fussell/courses/cs354/assignments/raytracing/equations.pdf
-  ray point_to_light(p, getDirection(p));
+  ray point_to_light(p, getDirection(p), ray::SHADOW);
   isect intersect_info;
 
-  // See if the ray from the point to the light intersects with any object
-  if (scene->intersect(point_to_light, intersect_info))
-  {  
+  // Find intersection point
+  bool intersection = scene->intersect(point_to_light, intersect_info);
+  Vec3d q = point_to_light.at(intersect_info.t);
+
+  // Find length between p and q to use for dropoff of shadow color 
+  double distance_pq = (p - q).length();
+  bool before_light = (distance_pq < (position - p).length());
+
+  // See if the ray from the point to the light intersects with any object, if it doesn't then just return the light color
+  if (intersection && before_light)
+  {
+    // Grab transmissive material property
+    Vec3d kt = intersect_info.material->kt(intersect_info);
+
+    // Compute dropoff coefficient (only useful whenever we have a transparent object and treat q as a new light source)
+    double attenuation = min(1.0, 1.0 / (constantTerm + (linearTerm * distance_pq) + (quadraticeTerm * distance_pq * distance_pq)));
+
+    // We might intersect with another object using the ray from q to the light source
+    Vec3d intensity_at_q = shadowAttenuation(r, q);
+
+    // Return the componenet-wise multiplication of transmissive material property and color at q and then scale it with dropoff coefficient
+    return prod(intensity_at_q, kt) * attenuation
   }
   else
-    return color;
+    return color * distanceAttenuation(p);
 }

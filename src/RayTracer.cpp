@@ -67,9 +67,9 @@ Vec3d RayTracer::tracePixel(int i, int j)
 Vec3d RayTracer::traceRay(ray& r, int depth)
 {
 	isect i;
-	Vec3d colorC;
 
-	if(scene->intersect(r, i)) {
+	if(scene->intersect(r, i)) 
+	{
 		// YOUR CODE HERE
 
 		// An intersection occurred!  We've got work to do.  For now,
@@ -80,15 +80,83 @@ Vec3d RayTracer::traceRay(ray& r, int depth)
 		// Instead of just returning the result of shade(), add some
 		// more steps: add in the contributions from reflected and refracted
 		// rays.
-	  const Material& m = i.getMaterial();
-	  colorC = m.shade(scene, r, i);
-	} else {
+
+		const Material& m = i.getMaterial();
+		Vec3d color = m.shade(scene, r, i);
+
+	  	// If we've reached the end of recursion, return the color of the fragment that we intersected
+	  	if (!depth)
+	  		return color;
+
+	  	Vec3d p = r.at(i.t);
+
+	  	// Don't bother with reflection unless kr vector isn't the 0 vector
+	  	if (!m.kr(i).isZero())
+	  	{
+	  		// Find the reflection of the view vector about the normal
+	  		Vec3d nV = r.d;
+    		Vec3d R = (nV - (2.0 * i.N) * (nV * i.N)).normalize();
+
+    		// Build and trace reflection ray
+    		ray reflect_ray(p, R, ray::REFLECTION);
+    		Vec3d reflect_color = traceRay(reflect_ray, d - 1);
+
+    		// Add reflection ray's color
+    		color += prod(reflect_color, m.kr(i));
+    	}
+
+    	// Don't bother with refraction unless kt vector isn't the 0 vector
+    	if (!m.kt(i).isZero())
+    	{
+    		// Determine status of current ray
+    		Vec3d V = -1.0 * nV;
+    		double cos_i = (i.N * V);
+    		bool entering_obj = (cos_i > 0.0);
+    		bool exiting_obj = (cos_i < 0.0);
+
+    		// Build index of refraction
+    		double n = (entering_obj 
+    				? 1.0 / m.index(i)
+    				: (exiting_obj
+    					? m.index(i)
+    					: 0.0)
+    				);
+
+    		// We need to adjust the normal if the ray from inside the obejct
+    		Vec3d N = (entering_obj
+    				? i.N
+    				: (exiting_obj
+    					? -1.0 * i.N
+    					: Vec3d(0.0, 0.0, 0.0))
+    				);
+
+    		double cos_t_sq = (1.0 - n * n * (1 - cos_i * cos_i));
+
+    		// Only use refraction when we don't have Total Internal Reflection
+    		if (cos_t_sq > 0.0 && (entering_obj || exiting_obj))
+    		{
+    			// Find refraction vector
+    			double cos_t = sqrt(cos_t_sq);
+    			Vec3d T = (((n * cos_i) - cos_t) * N) - (n * V);
+
+    			// Build and trace refraction ray
+    			ray refract_ray(p, T, ray::REFRACTION);
+    			Vec3d refract_color = traceRay(refract_ray, d - 1);
+
+    			// Add refraction ray's color
+    			color += prod(refract_color, m.kt(i));
+    		}
+    	}
+
+    	return color_at_p;
+	} 
+	else 
+	{
 		// No intersection.  This ray travels to infinity, so we color
 		// it according to the background color, which in this (simple) case
 		// is just black.
-		colorC = Vec3d(0.0, 0.0, 0.0);
+		return Vec3d(0.0, 0.0, 0.0);
 	}
-	return colorC;
 }
 
 RayTracer::RayTracer()

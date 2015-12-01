@@ -30,14 +30,14 @@ Vec3d DirectionalLight::shadowAttenuation(const ray& r, const Vec3d& p) const
     Vec3d kt = intersect_info.material->kt(intersect_info);
 
     // Find length between p and q to use for dropoff of shadow color (only useful whenever we have a transparent object and treat q as a new point light source)
-    double distance_pq = (p - q).length();
-    double attenuation = min(1.0, 1.0 / (1.0 + (0.1 * distance_pq) + (0.01 * distance_pq * distance_pq)));
+    // double distance_pq = (p - q).length();
+    // double attenuation = min(1.0, 1.0 / (1.0 + (0.1 * distance_pq) + (0.01 * distance_pq * distance_pq)));
 
     // We might intersect with another object using the ray from q to the light source
     Vec3d intensity_at_q = shadowAttenuation(r, q);
 
-    // Return the componenet-wise multiplication of transmissive material property and color at q and then scale it with dropoff coefficient
-    return prod(intensity_at_q, kt) * attenuation;
+    // Return the componenet-wise multiplication of transmissive material property and color at q
+    return prod(intensity_at_q, kt);
   }
   else
     return color;
@@ -108,14 +108,14 @@ Vec3d PointLight::shadowAttenuation(const ray& r, const Vec3d& p) const
     Vec3d kt = intersect_info.material->kt(intersect_info);
 
     // Compute dropoff coefficient (only useful whenever we have a transparent object and treat q as a new light source)
-    double attenuation = min(1.0, 1.0 / (constantTerm + (linearTerm * distance_pq) + (quadraticeTerm * distance_pq * distance_pq)));
+    // double attenuation = min(1.0, 1.0 / (constantTerm + (linearTerm * distance_pq) + (quadraticeTerm * distance_pq * distance_pq)));
 
     // We might intersect with another object using the ray from q to the light source
     Vec3d intensity_at_q = shadowAttenuation(r, q);
 
-    // Return the componenet-wise multiplication of transmissive material property and color at q and then scale it with dropoff coefficient
-    return prod(intensity_at_q, kt) * attenuation
+    // Return the componenet-wise multiplication of transmissive material property and color at q
+    return prod(intensity_at_q, kt)
   }
   else
-    return color * distanceAttenuation(p);
+    return color;
 }

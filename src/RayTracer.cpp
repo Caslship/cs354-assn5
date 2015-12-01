@@ -89,24 +89,25 @@ Vec3d RayTracer::traceRay(ray& r, int depth)
 			return color;
 
 		Vec3d p = r.at(i.t);
+		Vec3d nV = r.d;
 
 		// Don't bother with reflection unless kr vector isn't the 0 vector
-		if (!m.kr(i).isZero())
+		if (!m.kr(i).iszero())
 		{
 			// Find the reflection of the view vector about the normal
-			Vec3d nV = r.d;
-			Vec3d R = (nV - (2.0 * i.N) * (nV * i.N)).normalize();
+			Vec3d R = (nV - (2.0 * i.N) * (nV * i.N));
+			R.normalize();
 
 			// Build and trace reflection ray
 			ray reflect_ray(p, R, ray::REFLECTION);
-			Vec3d reflect_color = traceRay(reflect_ray, d - 1);
+			Vec3d reflect_color = traceRay(reflect_ray, depth - 1);
 
 			// Add reflection ray's color
 			color += prod(reflect_color, m.kr(i));
 		}
 
 		// Don't bother with refraction unless kt vector isn't the 0 vector
-		if (!m.kt(i).isZero())
+		if (!m.kt(i).iszero())
 		{
 			// Determine status of current ray
 			Vec3d V = -1.0 * nV;
@@ -138,17 +139,18 @@ Vec3d RayTracer::traceRay(ray& r, int depth)
 				// Find refraction vector
 				double cos_t = sqrt(cos_t_sq);
 				Vec3d T = (((n * cos_i) - cos_t) * N) - (n * V);
+				T.normalize();
 
 				// Build and trace refraction ray
 				ray refract_ray(p, T, ray::REFRACTION);
-				Vec3d refract_color = traceRay(refract_ray, d - 1);
+				Vec3d refract_color = traceRay(refract_ray, depth - 1);
 
 				// Add refraction ray's color
 				color += prod(refract_color, m.kt(i));
 			}
 		}
 
-		return color_at_p;
+		return color;
 	} 
 	else 
 	{

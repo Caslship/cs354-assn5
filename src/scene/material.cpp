@@ -46,8 +46,7 @@ Vec3d Material::shade(Scene *scene, const ray& r, const isect& i) const
   Vec3d p = r.at(i.t);
 
   // Start building color with terms that aren't dependent on lights
-  Vec3d color(0.0, 0.0, 0.0);
-  color = ke(i) + prod(ka(i), scene->ambient());
+  Vec3d color = ke(i) + prod(ka(i), scene->ambient());
 
   // Loop through lights
   for (vector<Light*>::const_iterator iter = scene->beginLights(); iter != scene->endLights(); ++iter)
@@ -57,22 +56,24 @@ Vec3d Material::shade(Scene *scene, const ray& r, const isect& i) const
 
     // Compute dot product between normal and light vector
     Vec3d L = (*iter)->getDirection(p);
-    double N_dot_L = max(i.N * L, 0);
+    double N_dot_L = max(i.N * L, 0.0);
 
     // Compute reflection of light about normal vector
     Vec3d nL = -1.0 * L;
-    Vec3d R = (nL - (2.0 * i.N) * (nL * i.N)).normalize();
+    Vec3d R = (nL - ((2.0 * i.N) * (nL * i.N)));
+    R.normalize();
 
     // Compute dot product of reflection and view vector
-    Vec3d V = (scene->getCamera().getEye() - p).normalize();
-    double V_dot_R =  max(V * R, 0);
+    Vec3d V = (scene->getCamera().getEye() - p);
+    V.normalize();
+    double V_dot_R =  max(V * R, 0.0);
 
     // Compute diffuse and specular contributions
     Vec3d diffuse = kd(i) * N_dot_L;
     Vec3d specular = ks(i) * pow(V_dot_R, shininess(i));
 
     // Compute final color
-    color += light_color * (diffuse + specular) * distanceAttenuation(p);   
+    color += prod(light_color, (diffuse + specular)) * (*iter)->distanceAttenuation(p);
   }
 
   return color;

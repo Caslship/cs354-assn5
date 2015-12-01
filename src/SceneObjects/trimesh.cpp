@@ -98,14 +98,14 @@ bool TrimeshFace::intersectLocal(ray& r, isect& i) const
 
     // Following code is based on this article: http://geomalgorithms.com/a06-_intersect-2.html
     // First, check to see if we intersect with the plane that the triangle resides in
-    double t_denom =  normal * (r.d);
+    double cos_plane_r =  normal * (r.d);
 
     // The ray is parallel to the plane (infinite/no intersection)
-    if (abs(t_denom) < RAY_EPSILON)
+    if (abs(cos_plane_r) < RAY_EPSILON)
         return false;
 
     // Compute the t value at which the ray intersects the plane
-    double t = (normal * (a - r.p)) / t_denom;
+    double t = (normal * (a - r.p)) / cos_plane_r;
 
     // Behind us
     if (t < 0.0)
@@ -122,15 +122,15 @@ bool TrimeshFace::intersectLocal(ray& r, isect& i) const
     double w_dot_u = w * u;
 
     // Compute twice the triangle's area (parallelogram)
-    double bary_denom = (u_dot_v * u_dot_v) - (u_dot_u * v_dot_v);
+    double tri_area = (u_dot_v * u_dot_v) - (u_dot_u * v_dot_v);
 
     // Unlikely for this to happen, but an area of zero implies that the ray never intersects
-    if (abs(bary_denom) < RAY_EPSILON)
+    if (abs(tri_area) < RAY_EPSILON)
         return false;
 
     // Compute barycentric coordinates of intersection point
-    double beta = ((u_dot_v * w_dot_v) - (v_dot_v * w_dot_u)) / bary_denom;
-    double gamma = ((u_dot_v * w_dot_u) - (u_dot_u * w_dot_v)) / bary_denom;
+    double beta = ((u_dot_v * w_dot_v) - (v_dot_v * w_dot_u)) / tri_area;
+    double gamma = ((u_dot_v * w_dot_u) - (u_dot_u * w_dot_v)) / tri_area;
     double alpha = 1.0 - (alpha + beta);
 
     // If any of the barycentric coordinates are less than 0 then we did not intersect the triangle
@@ -143,10 +143,10 @@ bool TrimeshFace::intersectLocal(ray& r, isect& i) const
     i.bary[0] = alpha;
     i.bary[1] = beta;
     i.bary[2] = gamma;
-    i.uv[0] = beta;
-    i.uv[1] = gamma;
+    i.uvCoordinates[0] = beta;
+    i.uvCoordinates[1] = gamma;
     i.obj = this;
-    i.material = parent->getMaterial();
+    i.setMaterial(getMaterial());
 
     // Interpolate vertex normals to find normal at point or just take surface normal
     if (parent->vertNorms)
@@ -156,10 +156,14 @@ bool TrimeshFace::intersectLocal(ray& r, isect& i) const
         const Vec3d& nc = parent->normals[ids[2]];
 
         // Barycentric interpolation is some cool shit
-        i.N = ((alpha * na) + (beta * nb) + (gamma * nc)).normalize(); 
+        i.N = ((alpha * na) + (beta * nb) + (gamma * nc));
+        i.N.normalize(); 
     }
     else
-        i.N = normal.normalize();
+    {
+        i.N = normal;
+        i.N.normalize();
+    }
 
     return true;
 }

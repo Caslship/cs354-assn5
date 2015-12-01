@@ -64,7 +64,7 @@ double PointLight::distanceAttenuation(const Vec3d& P) const
 
   // Base on slide 19: http://www.cs.utexas.edu/~fussell/courses/cs354/lectures/lecture10.pdf
   double distance = (P - position).length();
-  double attenuation = 1.0 / (constantTerm + (linearTerm * distance) + (quadraticeTerm * distance * distance));
+  double attenuation = 1.0 / (constantTerm + (linearTerm * distance) + (quadraticTerm * distance * distance));
 
   // Light intensity should only get weaker or stay the same
   return min(1.0, attenuation);
@@ -113,7 +113,7 @@ Vec3d PointLight::shadowAttenuation(const ray& r, const Vec3d& p) const
     Vec3d intensity_at_q = shadowAttenuation(r, q);
 
     // Return the componenet-wise multiplication of transmissive material property and color at q
-    return prod(intensity_at_q, kt)
+    return prod(intensity_at_q, kt);
   }
   else
     return color;

@@ -107,7 +107,7 @@ Vec3d PointLight::shadowAttenuation(const ray& r, const Vec3d& p) const
     Vec3d kt = intersect_info.material->kt(intersect_info);
 
     // Compute dropoff coefficient (only useful whenever we have a transparent object and treat q as a new light source)
-    // double attenuation = min(1.0, 1.0 / (constantTerm + (linearTerm * distance_pq) + (quadraticeTerm * distance_pq * distance_pq)));
+    // double attenuation = min(1.0, 1.0 / (constantTerm + (linearTerm * distance_pq) + (quadraticTerm * distance_pq * distance_pq)));
 
     // We might intersect with another object using the ray from q to the light source
     Vec3d intensity_at_q = shadowAttenuation(r, q);

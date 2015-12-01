@@ -62,6 +62,18 @@ void GraphicalUI::cb_load_scene(Fl_Menu_* o, void* v)
 	}
 }
 
+void GraphicalUI::cb_load_cubemap(Fl_Menu_* o, void* v)
+{
+	pUI = whoami(o);
+	pUI->m_cubeMapChooser->show();
+}
+
+void GraphicalUI::cb_cubeMapCheckButton(Fl_Widget* o, void* v)
+{
+	pUI = (GraphicalUI*)(o->user_data());
+	pUI->m_usingCubeMap = ((Fl_Check_Button *)o)->value();
+}
+
 void GraphicalUI::cb_save_image(Fl_Menu_* o, void* v) 
 {
 	pUI = whoami(o);
@@ -100,7 +112,7 @@ void GraphicalUI::cb_exit2(Fl_Widget* o, void* v)
 
 void GraphicalUI::cb_about(Fl_Menu_* o, void* v) 
 {
-	fl_message("RayTracer Project for CS384g.");
+	fl_message("RayTracer Project for CS354 Fall 2015.");
 }
 
 void GraphicalUI::cb_sizeSlides(Fl_Widget* o, void* v)
@@ -224,6 +236,7 @@ void GraphicalUI::setRayTracer(RayTracer *tracer)
 Fl_Menu_Item GraphicalUI::menuitems[] = {
 	{ "&File", 0, 0, 0, FL_SUBMENU },
 	{ "&Load Scene...",	FL_ALT + 'l', (Fl_Callback *)GraphicalUI::cb_load_scene },
+	{ "&Load Cubemap...", FL_ALT + 'c', (Fl_Callback *)GraphicalUI::cb_load_cubemap },
 	{ "&Save Image...", FL_ALT + 's', (Fl_Callback *)GraphicalUI::cb_save_image },
 	{ "&Exit", FL_ALT + 'e', (Fl_Callback *)GraphicalUI::cb_exit },
 	{ 0 },
@@ -303,6 +316,12 @@ GraphicalUI::GraphicalUI() : refreshInterval(10) {
 	m_debuggingDisplayCheckButton->callback(cb_debuggingDisplayCheckButton);
 	m_debuggingDisplayCheckButton->value(m_displayDebuggingInfo);
 
+	// cubemap chooser
+	m_cubeMapCheckButton = new Fl_Check_Button(10, 400, 100, 20, "Using Cubemap");
+	m_cubeMapCheckButton->user_data((void*)this);
+	m_cubeMapCheckButton->value(m_usingCubeMap);
+	m_cubeMapCheckButton->callback(cb_cubeMapCheckButton);
+
 	m_mainWindow->callback(cb_exit2);
 	m_mainWindow->when(FL_HIDE);
 	m_mainWindow->end();
@@ -314,6 +333,10 @@ GraphicalUI::GraphicalUI() : refreshInterval(10) {
 
 	// debugging view
 	m_debuggingWindow = new DebuggingWindow();
+
+	// cubemap chooser
+	m_cubeMapChooser = new CubeMapChooser();
+	m_cubeMapChooser->setCaller(this);
 }
 
 #endif

@@ -58,7 +58,7 @@ Vec3d Material::shade(Scene *scene, const ray& r, const isect& i) const
     // Compute dot product between normal and light vector
     Vec3d L = (*iter)->getDirection(p);
     double N_dot_L = max(i.N * L, 0);
-    
+
     // Compute reflection of light about normal vector
     Vec3d nL = -1.0 * L;
     Vec3d R = (nL - (2.0 * i.N) * (nL * i.N)).normalize();

@@ -56,7 +56,6 @@ Vec3d DirectionalLight::getDirection(const Vec3d& P) const
 
 double PointLight::distanceAttenuation(const Vec3d& P) const
 {
-
   // YOUR CODE HERE
 
   // You'll need to modify this method to attenuate the intensity 

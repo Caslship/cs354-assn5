@@ -54,26 +54,35 @@ Vec3d RayTracer::tracePixel(int i, int j)
 	unsigned char *pixel = buffer + ( i + j * buffer_width ) * 3;
 
 	// Anti-aliasing
-	// For supersampling, a pixel is partitioned into a sqrt(num_samples) by sqrt(num_samples) grid - we need to find an increment to traverse each sample in this grid
-	// The increment can be defined by assuming the image now has a resolution of (width * height * num_samples) and finding the increments of a normal pixel in that resolution
-	const double sqrt_num_samples = (double)traceUI->m_nAASamples_Sqrt;
-	const double x_aa_sample_inc = (1.0 / ((double)buffer_width * sqrt_num_samples));
-	const double y_aa_sample_inc = (1.0 / ((double)buffer_height * sqrt_num_samples));
-
-	// Traverse pixel like a grid and add up all the colors at each sample
-	for (int x_aa_sample = 0; x_aa_sample < sqrt_num_samples; ++x_aa_sample)
+	int num_aa_samples_sqrt = traceUI->getAASampleSqrt();
+	if (num_aa_samples_sqrt > 1)
 	{
-		double sample_x = x + ((double)x_aa_sample * x_aa_sample_inc);
-		for (int y_aa_sample = 0; y_aa_sample < sqrt_num_samples; ++y_aa_sample)
+		cout << "HIYA KIDS! " << num_aa_samples_sqrt << endl;
+		// For supersampling, a pixel is partitioned into a sqrt(num_samples) by sqrt(num_samples) grid - we need to find an increment to traverse each sample in this grid
+		// The increment can be defined by assuming the image now has a resolution of (width * height * num_samples) and finding the increments of a normal pixel in that resolution
+		const double x_aa_sample_inc = (1.0 / ((double)buffer_width * (double)num_aa_samples_sqrt));
+		const double y_aa_sample_inc = (1.0 / ((double)buffer_height * (double)num_aa_samples_sqrt));
+
+		// Traverse pixel like a grid and add up all the colors at each sample
+		for (int x_aa_sample = 0; x_aa_sample < num_aa_samples_sqrt; ++x_aa_sample)
 		{
-			double sample_y = y + ((double)y_aa_sample * y_aa_sample_inc);
-			col += trace(sample_x, sample_y);
+			double sample_x = x + ((double)x_aa_sample * x_aa_sample_inc);
+			for (int y_aa_sample = 0; y_aa_sample < num_aa_samples_sqrt; ++y_aa_sample)
+			{
+				double sample_y = y + ((double)y_aa_sample * y_aa_sample_inc);
+				col += trace(sample_x, sample_y);
+			}
+
 		}
 
+		// Average all the colors
+		col /= (num_aa_samples_sqrt * num_aa_samples_sqrt);
 	}
-
-	// Average all the colors
-	col /= (sqrt_num_samples * sqrt_num_samples);
+	else
+	{
+		// No anti-aliasing
+		col = trace(x, y);
+	}
 
 	pixel[0] = (int)( 255.0 * col[0]);
 	pixel[1] = (int)( 255.0 * col[1]);
@@ -175,7 +184,7 @@ Vec3d RayTracer::traceRay(ray& r, int depth)
 	else 
 	{
 		// No intersection.  This ray travels to infinity, so we color it according to the background color.
-		if (m_usingCubeMap && m_gotCubeMap)
+		if (traceUI->usingCubeMap() && traceUI->gotCubeMap())
 		{
 			// Cube-mapping - see wherever our ray intersects with the cube map and color our pixel using that
 			return cubemap->getColor(r);
@@ -190,7 +199,7 @@ Vec3d RayTracer::traceRay(ray& r, int depth)
 }
 
 RayTracer::RayTracer()
-	: scene(0), buffer(0), buffer_width(256), buffer_height(256), m_bBufferReady(false)
+	: scene(0), buffer(0), buffer_width(256), buffer_height(256), m_bBufferReady(false), cubemap(0)
 {}
 
 RayTracer::~RayTracer()

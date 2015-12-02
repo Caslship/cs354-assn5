@@ -72,6 +72,13 @@ void GraphicalUI::cb_cubeMapCheckButton(Fl_Widget* o, void* v)
 {
 	pUI = (GraphicalUI*)(o->user_data());
 	pUI->m_usingCubeMap = ((Fl_Check_Button *)o)->value();
+
+	(pUI->m_usingCubeMap ? pUI->m_filterSlider->activate() : pUI->m_filterSlider->deactivate());
+}
+
+void GraphicalUI::cb_filterWidthSlides(Fl_Widget* o, void* v)
+{
+	((GraphicalUI*)(o->user_data()))->m_nFilterWidth=int( ((Fl_Slider *)o)->value() );
 }
 
 void GraphicalUI::cb_save_image(Fl_Menu_* o, void* v) 
@@ -316,11 +323,30 @@ GraphicalUI::GraphicalUI() : refreshInterval(10) {
 	m_debuggingDisplayCheckButton->callback(cb_debuggingDisplayCheckButton);
 	m_debuggingDisplayCheckButton->value(m_displayDebuggingInfo);
 
-	// cubemap chooser
+	// cubemap checkbox
 	m_cubeMapCheckButton = new Fl_Check_Button(10, 400, 100, 20, "Cubemap");
 	m_cubeMapCheckButton->user_data((void*)this);
 	m_cubeMapCheckButton->value(m_usingCubeMap);
 	m_cubeMapCheckButton->callback(cb_cubeMapCheckButton);
+	m_cubeMapCheckButton->deactivate();
+
+	// cubemap width filter
+	m_filterSlider = new Fl_Value_Slider(10, 115, 180, 20, "Cubemap Filter Width");
+	m_filterSlider->user_data((void*)(this));	// record self to be used by static callback functions
+	m_filterSlider->type(FL_HOR_NICE_SLIDER);
+	m_filterSlider->labelfont(FL_COURIER);
+	m_filterSlider->labelsize(12);
+	m_filterSlider->minimum(1);
+	m_filterSlider->maximum(32);
+	m_filterSlider->step(1);
+	m_filterSlider->value(m_nFilterWidth);
+	m_filterSlider->align(FL_ALIGN_RIGHT);
+	m_filterSlider->callback(cb_filterWidthSlides);
+	m_filterSlider->deactivate();
+
+	// cubemap chooser
+	m_cubeMapChooser = new CubeMapChooser();
+	m_cubeMapChooser->setCaller(this);
 
 	m_mainWindow->callback(cb_exit2);
 	m_mainWindow->when(FL_HIDE);
@@ -333,10 +359,6 @@ GraphicalUI::GraphicalUI() : refreshInterval(10) {
 
 	// debugging view
 	m_debuggingWindow = new DebuggingWindow();
-
-	// cubemap chooser
-	m_cubeMapChooser = new CubeMapChooser();
-	m_cubeMapChooser->setCaller(this);
 }
 
 #endif

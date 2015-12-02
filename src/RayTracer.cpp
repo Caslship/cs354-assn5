@@ -154,15 +154,16 @@ Vec3d RayTracer::traceRay(ray& r, int depth)
 	} 
 	else 
 	{
-		// No intersection.  This ray travels to infinity, so we color
-		// it according to the background color, which in this (simple) case
-		// is just black.
-		if (!cubemap)
-			return Vec3d(0.0, 0.0, 0.0);
-		else
+		// No intersection.  This ray travels to infinity, so we color it according to the background color.
+		if (m_usingCubeMap && m_gotCubeMap)
 		{
 			// Cube-mapping - see wherever our ray intersects with the cube map and color our pixel using that
 			return cubemap->getColor(r);
+		}
+		else
+		{
+			// No background
+			return Vec3d(0.0, 0.0, 0.0);
 		}
 			
 	}

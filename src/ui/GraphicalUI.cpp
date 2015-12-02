@@ -317,7 +317,7 @@ GraphicalUI::GraphicalUI() : refreshInterval(10) {
 	m_debuggingDisplayCheckButton->value(m_displayDebuggingInfo);
 
 	// cubemap chooser
-	m_cubeMapCheckButton = new Fl_Check_Button(10, 400, 100, 20, "Using Cubemap");
+	m_cubeMapCheckButton = new Fl_Check_Button(10, 400, 100, 20, "Cubemap");
 	m_cubeMapCheckButton->user_data((void*)this);
 	m_cubeMapCheckButton->value(m_usingCubeMap);
 	m_cubeMapCheckButton->callback(cb_cubeMapCheckButton);

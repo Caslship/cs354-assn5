@@ -328,29 +328,8 @@ GraphicalUI::GraphicalUI() : refreshInterval(10) {
 	m_debuggingDisplayCheckButton->callback(cb_debuggingDisplayCheckButton);
 	m_debuggingDisplayCheckButton->value(m_displayDebuggingInfo);
 
-	// cubemap checkbox
-	m_cubeMapCheckButton = new Fl_Check_Button(10, 400, 100, 20, "Cubemap");
-	m_cubeMapCheckButton->user_data((void*)this);
-	m_cubeMapCheckButton->value(m_usingCubeMap);
-	m_cubeMapCheckButton->callback(cb_cubeMapCheckButton);
-	m_cubeMapCheckButton->deactivate();
-
-	// cubemap width filter
-	m_filterSlider = new Fl_Value_Slider(10, 115, 180, 20, "Cubemap Filter Width");
-	m_filterSlider->user_data((void*)(this));	// record self to be used by static callback functions
-	m_filterSlider->type(FL_HOR_NICE_SLIDER);
-	m_filterSlider->labelfont(FL_COURIER);
-	m_filterSlider->labelsize(12);
-	m_filterSlider->minimum(1);
-	m_filterSlider->maximum(32); // Max cubemap resolution: 32 x 32
-	m_filterSlider->step(1);
-	m_filterSlider->value(m_nFilterWidth);
-	m_filterSlider->align(FL_ALIGN_RIGHT);
-	m_filterSlider->callback(cb_filterWidthSlides);
-	m_filterSlider->deactivate();
-
 	// anti-aliasing sample count filter
-	m_aaSamplesSlider = new Fl_Value_Slider(10, 140, 180, 20, "AA Sample Rate");
+	m_aaSamplesSlider = new Fl_Value_Slider(10, 115, 180, 20, "AA Sample Factor");
 	m_aaSamplesSlider->user_data((void*)(this));	// record self to be used by static callback functions
 	m_aaSamplesSlider->type(FL_HOR_NICE_SLIDER);
 	m_aaSamplesSlider->labelfont(FL_COURIER);
@@ -362,10 +341,30 @@ GraphicalUI::GraphicalUI() : refreshInterval(10) {
 	m_aaSamplesSlider->align(FL_ALIGN_RIGHT);
 	m_aaSamplesSlider->callback(cb_aaSamplesSlides);
 
+	// cubemap checkbox
+	m_cubeMapCheckButton = new Fl_Check_Button(10, 400, 100, 20, "Cubemap");
+	m_cubeMapCheckButton->user_data((void*)this);
+	m_cubeMapCheckButton->value(m_usingCubeMap);
+	m_cubeMapCheckButton->callback(cb_cubeMapCheckButton);
+	m_cubeMapCheckButton->deactivate();
+
+	// cubemap width filter
+	m_filterSlider = new Fl_Value_Slider(10, 140, 180, 20, "Cubemap Motion Blur Factor");
+	m_filterSlider->user_data((void*)(this));	// record self to be used by static callback functions
+	m_filterSlider->type(FL_HOR_NICE_SLIDER);
+	m_filterSlider->labelfont(FL_COURIER);
+	m_filterSlider->labelsize(12);
+	m_filterSlider->minimum(1);
+	m_filterSlider->maximum(32); // Max motion blur factor: 32
+	m_filterSlider->step(1);
+	m_filterSlider->value(m_nFilterWidth);
+	m_filterSlider->align(FL_ALIGN_RIGHT);
+	m_filterSlider->callback(cb_filterWidthSlides);
+	m_filterSlider->deactivate();
+
 	// cubemap chooser
 	m_cubeMapChooser = new CubeMapChooser();
 	m_cubeMapChooser->setCaller(this);
-
 
 	m_mainWindow->callback(cb_exit2);
 	m_mainWindow->when(FL_HIDE);

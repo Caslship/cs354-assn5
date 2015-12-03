@@ -94,6 +94,7 @@ private:
 	static void cb_depthSlides(Fl_Widget* o, void* v);
 	static void cb_refreshSlides(Fl_Widget* o, void* v);
 	static void cb_filterWidthSlides(Fl_Widget* o, void* v);
+	static void cb_aaSamplesSlides(Fl_Widget* o, void* v);
 
 	static void cb_render(Fl_Widget* o, void* v);
 	static void cb_stop(Fl_Widget* o, void* v);

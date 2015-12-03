@@ -81,6 +81,11 @@ void GraphicalUI::cb_filterWidthSlides(Fl_Widget* o, void* v)
 	((GraphicalUI*)(o->user_data()))->m_nFilterWidth=int( ((Fl_Slider *)o)->value() );
 }
 
+void GraphicalUI::cb_aaSamplesSlides(Fl_Widget* o, void* v)
+{
+	((GraphicalUI*)(o->user_data()))->m_nAASampleSqrt=int( ((Fl_Slider *)o)->value() );
+}
+
 void GraphicalUI::cb_save_image(Fl_Menu_* o, void* v) 
 {
 	pUI = whoami(o);
@@ -337,16 +342,30 @@ GraphicalUI::GraphicalUI() : refreshInterval(10) {
 	m_filterSlider->labelfont(FL_COURIER);
 	m_filterSlider->labelsize(12);
 	m_filterSlider->minimum(1);
-	m_filterSlider->maximum(32);
+	m_filterSlider->maximum(32); // Max cubemap resolution: 32 x 32
 	m_filterSlider->step(1);
 	m_filterSlider->value(m_nFilterWidth);
 	m_filterSlider->align(FL_ALIGN_RIGHT);
 	m_filterSlider->callback(cb_filterWidthSlides);
 	m_filterSlider->deactivate();
 
+	// anti-aliasing sample count filter
+	m_aaSamplesSlider = new Fl_Value_Slider(10, 140, 180, 20, "AA Sample Rate");
+	m_aaSamplesSlider->user_data((void*)(this));	// record self to be used by static callback functions
+	m_aaSamplesSlider->type(FL_HOR_NICE_SLIDER);
+	m_aaSamplesSlider->labelfont(FL_COURIER);
+	m_aaSamplesSlider->labelsize(12);
+	m_aaSamplesSlider->minimum(1);
+	m_aaSamplesSlider->maximum(4); // Max sample count: 16
+	m_aaSamplesSlider->step(1);
+	m_aaSamplesSlider->value(m_nAASampleSqrt);
+	m_aaSamplesSlider->align(FL_ALIGN_RIGHT);
+	m_aaSamplesSlider->callback(cb_aaSamplesSlides);
+
 	// cubemap chooser
 	m_cubeMapChooser = new CubeMapChooser();
 	m_cubeMapChooser->setCaller(this);
+
 
 	m_mainWindow->callback(cb_exit2);
 	m_mainWindow->when(FL_HIDE);

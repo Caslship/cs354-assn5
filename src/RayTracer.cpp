@@ -57,7 +57,6 @@ Vec3d RayTracer::tracePixel(int i, int j)
 	int num_aa_samples_sqrt = traceUI->getAASampleSqrt();
 	if (num_aa_samples_sqrt > 1)
 	{
-		cout << "HIYA KIDS! " << num_aa_samples_sqrt << endl;
 		// For supersampling, a pixel is partitioned into a sqrt(num_samples) by sqrt(num_samples) grid - we need to find an increment to traverse each sample in this grid
 		// The increment can be defined by assuming the image now has a resolution of (width * height * num_samples) and finding the increments of a normal pixel in that resolution
 		const double x_aa_sample_inc = (1.0 / ((double)buffer_width * (double)num_aa_samples_sqrt));

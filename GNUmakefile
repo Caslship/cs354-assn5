@@ -4,7 +4,7 @@
 
 FLTK_LIBS = -lfltk -lfltk_gl -lfltk_images -lfltk_forms -lpng -lz
 X_LIBS = -lXext -lX11 -lXfixes
-OPENGL_LIBS = -L/usr/lib/nvidia-340-updates -lGL -lGLU
+OPENGL_LIBS = -L/usr/lib/nvidia-340 -L/usr/lib/nvidia-340-updates -lGL -lGLU
 OTHER_LIBS = -lm -lpthread -ldl
 
 LIBS = $(FLTK_LIBS) $(X_LIBS) $(OPENGL_LIBS) $(OTHER_LIBS)

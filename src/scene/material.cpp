@@ -129,8 +129,14 @@ Vec3d TextureMap::getMappedValue( const Vec2d& coord ) const
   if (0 == data)
       return Vec3d(1.0, 1.0, 1.0);
 
-  int x = (int)(coord[0] * width) % width;
-  int y = (int)(coord[1] * height) % height;
+  int x = (int)(coord[0] * width);
+  int y = (int)(coord[1] * height);
+
+  if(x >= width)
+    x = width - 1;
+  if(y >= height)
+    y = height - 1;
+
   int pos = (x + (y * width)) * 3;
 
   Vec3d color((double)data[pos], (double)data[pos + 1], (double)data[pos + 2]);

@@ -107,8 +107,8 @@ bool TrimeshFace::intersectLocal(ray& r, isect& i) const
     // Compute the t value at which the ray intersects the plane
     double t = (normal * (a - r.p)) / cos_plane_r;
 
-    // Behind us
-    if (t < 0.0)
+    // Behind us or at the starting point of the ray
+    if (t < 0.0 || abs(t) < RAY_EPSILON)
         return false;
 
     // We intersect the plane, now find if the point intersects with the triangle
@@ -131,7 +131,7 @@ bool TrimeshFace::intersectLocal(ray& r, isect& i) const
     // Compute barycentric coordinates of intersection point
     double beta = ((u_dot_v * w_dot_v) - (v_dot_v * w_dot_u)) / tri_area;
     double gamma = ((u_dot_v * w_dot_u) - (u_dot_u * w_dot_v)) / tri_area;
-    double alpha = 1.0 - (alpha + beta);
+    double alpha = 1.0 - (beta + gamma);
 
     // If any of the barycentric coordinates are less than 0 then we did not intersect the triangle
     if (alpha < 0.0 || beta < 0.0 || gamma < 0.0)
@@ -146,7 +146,6 @@ bool TrimeshFace::intersectLocal(ray& r, isect& i) const
     i.uvCoordinates[0] = beta;
     i.uvCoordinates[1] = gamma;
     i.obj = this;
-    i.setMaterial(getMaterial());
 
     // Interpolate vertex normals to find normal at point or just take surface normal
     if (parent->vertNorms)
@@ -163,6 +162,31 @@ bool TrimeshFace::intersectLocal(ray& r, isect& i) const
     {
         i.N = normal;
         i.N.normalize();
+    }
+
+    // Interpolate vertex materials if possible
+    if (!parent->materials.empty())
+    {
+        // The overloaded operators for materials suck
+        Material ma = *parent->materials[ids[0]];
+        ma = alpha * ma;
+
+        Material mb = *parent->materials[ids[1]];
+        mb = beta * ma;
+
+        Material mc = *parent->materials[ids[2]];
+        mc = gamma * mc;
+
+        Material m;
+        m += ma;
+        m += mb;
+        m += mc;
+
+        i.setMaterial(m);
+    }
+    else
+    {
+        i.setMaterial(this->getMaterial());
     }
 
     return true;

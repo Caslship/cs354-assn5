@@ -1,6 +1,7 @@
 #include <cmath>
 
 #include "light.h"
+#include <iostream>
 
 using namespace std;
 

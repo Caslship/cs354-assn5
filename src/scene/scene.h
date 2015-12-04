@@ -27,6 +27,8 @@
 class Light;
 class Scene;
 
+#define MAX_DEPTH 5
+
 class KdTree
 {
 private:
@@ -35,11 +37,12 @@ private:
   KdTree * _left;
   KdTree * _right;
   BoundingBox _bounds;
-  std::vector<Geometry *> _objects;
+  std::vector<Geometry *>  * _objects;
 
 public:
-  KdTree(BoundingBox bounds, std::vector<Geometry *> objects, int depth = 0);
+  KdTree(BoundingBox bounds, std::vector<Geometry *> objects, int depth = 0, int max_depth = MAX_DEPTH);
   bool intersect(ray& r, isect& i) const;
+  void insert(Geometry * object);
 };
 
 class SceneElement {

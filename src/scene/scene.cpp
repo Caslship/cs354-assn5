@@ -7,16 +7,22 @@
 
 using namespace std;
 
-KdTree::KdTree(BoundingBox bounds, std::vector<Geometry *> objects, int depth)
+KdTree::KdTree(BoundingBox bounds, std::vector<Geometry *> objects, int depth, int max_depth)
 {
 	_bounds = bounds;
-	_objects = objects;
+	_objects = NULL;
+	_left = NULL;
+	_right = NULL;
+	_depth = depth;
 	_axis = depth % 3;
 
 
 	// We only want as many as 5 branches or 2^5=32 leaf nodes
-	if (depth >= 5)
+	if (depth >= max_depth)
+	{
+		_objects = new std::vector<Geometry *>(objects); // We only care about having objects in the leaf nodes
 		return;
+	}
 
 	// If we have child nodes, sort the objects by axis for later use
 	switch(_axis)
@@ -24,19 +30,19 @@ KdTree::KdTree(BoundingBox bounds, std::vector<Geometry *> objects, int depth)
 		case 0:
 		{
 			// Sort objects by x coordinates
-			sort(_objects, sortX);
+			sort(objects, compareGeomX);
 			break;
 		}
 		case 1:
 		{
 			// Sort objects by y coordinates
-			sort(_objects, sortY);
+			sort(objects, compareGeomY);
 			break;
 		}
 		case 2:
 		{
 			// Sort objects by z coordinates
-			sort(_objects, sortZ);
+			sort(objects, compareGeomZ);
 			break;
 		}
 		default:
@@ -47,40 +53,53 @@ KdTree::KdTree(BoundingBox bounds, std::vector<Geometry *> objects, int depth)
 	int median_i = num_objects / 2;
 
 	std::vector<Geometry *> left_objects;
+	BoundingBox left_bounds(objects[0]->getBoundingBox());
 	for (int i = 0; i < median_i; ++i)
 	{
 		left_objects.push_back(objects[i]);
+		left_bounds.merge(objects[i]->getBoundingBox());
 	}
 
 	std::vector<Geometry *> right_objects;
+	BoundingBox right_bounds(objects[median_i]->getBoundingBox());
 	for (int i = median_i; i < num_objects; ++i)
 	{
 		right_objects.push_back(objects[i]);
+		right_bounds.merge(objects[i]->getBoundingBox());
 	}
 
-	_left = new KdTree(_bounds, left_objects, depth + 1);
-	_right = new KdTree(_bounds, right_objects, depth + 1);
-
+	_left = new KdTree(left_bounds, left_objects, depth + 1, max_depth);
+	_right = new KdTree(right_bounds, right_objects, depth + 1, max_depth);
 }
 
-bool sortX(Geometry * a, Geometry * b)
-{
-
-}
-
-bool sortY(Geometry * a, Geometry * b)
-{
-
-}
-
-bool sortZ(Geometry * a, Geometry * b)
-{
-
-}
-
-bool KdTree:intersect(ray& r, isect& i) const
+bool KdTree::intersect(ray& r, isect& i) const
 {
 	return bounds.intersect(r, tmin, tmax);
+}
+
+void KdTree::insert(Geometry * object)
+{
+	return;
+}
+
+bool compareGeomX(const Geometry * a, const Geometry * b)
+{
+	return a->getBoundingBox().getMin()[0] < b->getBoundingBox().getMin()[0];
+}
+
+bool compareGeomY(const Geometry * a, const Geometry * b)
+{
+	return a->getBoundingBox().getMin()[1] < b->getBoundingBox().getMin()[1];
+}
+
+bool compareGeomZ(const Geometry * a, const Geometry * b)
+{
+	return a->getBoundingBox().getMin()[2] < b->getBoundingBox().getMin()[2];
+}
+
+void Scene::buildKdTree()
+{
+	kdTree = new KdTree(sceneBounds, objects, 0, MAX_DEPTH);
 }
 
 bool Geometry::intersect(ray& r, isect& i) const {

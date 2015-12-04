@@ -1,10 +1,87 @@
 #include <cmath>
+#include <algorithm>
 
 #include "scene.h"
 #include "light.h"
 #include "../ui/TraceUI.h"
 
 using namespace std;
+
+KdTree::KdTree(BoundingBox bounds, std::vector<Geometry *> objects, int depth)
+{
+	_bounds = bounds;
+	_objects = objects;
+	_axis = depth % 3;
+
+
+	// We only want as many as 5 branches or 2^5=32 leaf nodes
+	if (depth >= 5)
+		return;
+
+	// If we have child nodes, sort the objects by axis for later use
+	switch(_axis)
+	{
+		case 0:
+		{
+			// Sort objects by x coordinates
+			sort(_objects, sortX);
+			break;
+		}
+		case 1:
+		{
+			// Sort objects by y coordinates
+			sort(_objects, sortY);
+			break;
+		}
+		case 2:
+		{
+			// Sort objects by z coordinates
+			sort(_objects, sortZ);
+			break;
+		}
+		default:
+			break;
+	}
+
+	int num_objects = objects.size();
+	int median_i = num_objects / 2;
+
+	std::vector<Geometry *> left_objects;
+	for (int i = 0; i < median_i; ++i)
+	{
+		left_objects.push_back(objects[i]);
+	}
+
+	std::vector<Geometry *> right_objects;
+	for (int i = median_i; i < num_objects; ++i)
+	{
+		right_objects.push_back(objects[i]);
+	}
+
+	_left = new KdTree(_bounds, left_objects, depth + 1);
+	_right = new KdTree(_bounds, right_objects, depth + 1);
+
+}
+
+bool sortX(Geometry * a, Geometry * b)
+{
+
+}
+
+bool sortY(Geometry * a, Geometry * b)
+{
+
+}
+
+bool sortZ(Geometry * a, Geometry * b)
+{
+
+}
+
+bool KdTree:intersect(ray& r, isect& i) const
+{
+	return bounds.intersect(r, tmin, tmax);
+}
 
 bool Geometry::intersect(ray& r, isect& i) const {
 	double tmin, tmax;

@@ -27,8 +27,20 @@
 class Light;
 class Scene;
 
-template <typename Obj>
-class KdTree;
+class KdTree
+{
+private:
+  int _axis;
+  int _depth;
+  KdTree * _left;
+  KdTree * _right;
+  BoundingBox _bounds;
+  std::vector<Geometry *> _objects;
+
+public:
+  KdTree(BoundingBox bounds, std::vector<Geometry *> objects, int depth = 0);
+  bool intersect(ray& r, isect& i) const;
+};
 
 class SceneElement {
 
@@ -286,7 +298,7 @@ public:
   // are exempt from this requirement.
   BoundingBox sceneBounds;
   
-  KdTree<Geometry>* kdtree;
+  KdTree * kdtree;
 
  public:
   // This is used for debugging purposes only.

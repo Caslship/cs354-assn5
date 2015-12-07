@@ -108,7 +108,7 @@ bool TrimeshFace::intersectLocal(ray& r, isect& i) const
     double t = (normal * (a - r.p)) / cos_plane_r;
 
     // Behind us or at the starting point of the ray
-    if (t < 0.0 || abs(t) < RAY_EPSILON)
+    if (t < RAY_EPSILON)
         return false;
 
     // We intersect the plane, now find if the point intersects with the triangle

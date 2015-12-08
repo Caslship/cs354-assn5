@@ -25,6 +25,7 @@ public:
                     {}
 
 	virtual int	run() = 0;
+	virtual void traceThreadFunc(const int start_x, const int end_x, const int start_y, const int end_y) = 0;
 
 	// Send an alert to the user in some manner
 	virtual void alert(const string& msg) = 0;

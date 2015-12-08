@@ -9,6 +9,9 @@
 
 #include "../RayTracer.h"
 
+#include <thread>
+#include <cmath>
+
 using namespace std;
 
 // The command line UI simply parses out all the arguments off
@@ -49,6 +52,13 @@ CommandLineUI::CommandLineUI( int argc, char* const* argv )
 	imgName = argv[optind+1];
 }
 
+void CommandLineUI::traceThreadFunc(const int start_x, const int end_x, const int start_y, const int end_y)
+{
+	for(int y = start_y; y < end_y; ++y)
+		for(int x = start_x; x < end_x; ++x)
+			raytracer->tracePixel(x, y);
+}
+
 int CommandLineUI::run()
 {
 	assert( raytracer != 0 );
@@ -62,13 +72,56 @@ int CommandLineUI::run()
 		raytracer->traceSetup( width, height );
 
 		clock_t start, end;
-		start = clock();
 
-		for( int j = 0; j < height; ++j )
-			for( int i = 0; i < width; ++i )
-//				raytracer->tracePixel(i,j);
+		// Handle tracing via multiple threads, but subtract one so that we may continue to do work in the current thread
+		const int num_threads = thread::hardware_concurrency();
 
-		end=clock();
+		// Can we even use multiple-threads?
+		if (num_threads > 1)
+		{
+			// We need to break up the image into a grid of regions where there are the same number of regions for length and height
+			// Each region is handled by a thread so that each thread has approximately the same amount of work (edge regions may be larger)
+			const int num_threads_sqrt = sqrt(num_threads);
+			const int x_thread_sample_inc = width / num_threads_sqrt;
+			const int y_thread_sample_inc = height / num_threads_sqrt;
+
+			start = clock();
+
+			// Create a thread to handle ray tracing for each region
+			for (int y_thread_sample = 0; y_thread_sample < num_threads_sqrt; ++y_thread_sample)
+			{
+				bool not_last_row = (y_thread_sample != (num_threads_sqrt - 1));
+				int y_thread_sample_start = y_thread_sample * y_thread_sample_inc;
+				int y_thread_sample_end = (not_last_row ? y_thread_sample_start + y_thread_sample_inc : height); // Ensure that the last row region covers all remaining pixels height-wise
+
+				for (int x_thread_sample = 0; x_thread_sample < num_threads_sqrt; ++x_thread_sample)
+				{
+					bool not_last_column = (x_thread_sample != (num_threads_sqrt - 1));
+					int x_thread_sample_start = x_thread_sample * x_thread_sample_inc;
+					int x_thread_sample_end = (not_last_column ? x_thread_sample_start + x_thread_sample_inc : width); // Ensure that the last column region covers remaining pixels width-wise
+
+					// Run thread given bounds for region
+					trace_threads[i].push_back(thread(x_thread_sample_start, x_thread_sample_end, y_thread_sample_start, y_thread_sample_end));
+				}
+			}
+
+			// Wait for all threads to finish
+			for (int i = 0; i < num_threads; ++i)
+				trace_threads[i].join();
+
+			end = clock();
+		}
+		else
+		{
+			// Regular single-thread ray tracing
+			start=clock();
+
+			for (int j = 0; j < height; ++j)
+				for (int i = 0; i < width; ++i)
+					raytracer->tracePixel(i, j);
+
+			end=clock();
+		}
 
 		// save image
 		unsigned char* buf;

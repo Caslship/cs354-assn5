@@ -63,12 +63,12 @@ Vec3d RayTracer::tracePixel(int i, int j)
 		const double y_aa_sample_inc = (1.0 / ((double)buffer_height * (double)num_aa_samples_sqrt));
 
 		// Traverse pixel like a grid and add up all the colors at each sample
-		for (int x_aa_sample = 0; x_aa_sample < num_aa_samples_sqrt; ++x_aa_sample)
+		for (int y_aa_sample = 0; y_aa_sample < num_aa_samples_sqrt; ++y_aa_sample)
 		{
-			double sample_x = x + ((double)x_aa_sample * x_aa_sample_inc);
-			for (int y_aa_sample = 0; y_aa_sample < num_aa_samples_sqrt; ++y_aa_sample)
+			double sample_y = y + ((double)y_aa_sample * y_aa_sample_inc);
+			for (int x_aa_sample = 0; x_aa_sample < num_aa_samples_sqrt; ++x_aa_sample)
 			{
-				double sample_y = y + ((double)y_aa_sample * y_aa_sample_inc);
+				double sample_x = x + ((double)x_aa_sample * x_aa_sample_inc);
 				col += trace(sample_x, sample_y);
 			}
 

@@ -27,6 +27,7 @@ public:
 	GraphicalUI();
 
 	int run();
+	void traceThreadFunc(const int start_x, const int end_x, const int start_y, const int end_y);
 
 	void alert( const string& msg );
 

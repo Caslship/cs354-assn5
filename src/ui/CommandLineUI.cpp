@@ -73,7 +73,7 @@ int CommandLineUI::run()
 
 		clock_t start, end;
 
-		// Handle tracing via multiple threads, but subtract one so that we may continue to do work in the current thread
+		// Handle tracing via multiple threads if possible
 		const int num_threads = thread::hardware_concurrency();
 
 		// Can we even use multiple-threads?
@@ -84,6 +84,8 @@ int CommandLineUI::run()
 			const int num_threads_sqrt = sqrt(num_threads);
 			const int x_thread_sample_inc = width / num_threads_sqrt;
 			const int y_thread_sample_inc = height / num_threads_sqrt;
+
+			vector<thread> trace_threads;
 
 			start = clock();
 

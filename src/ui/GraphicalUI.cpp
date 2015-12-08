@@ -89,6 +89,11 @@ void GraphicalUI::cb_aaSamplesSlides(Fl_Widget* o, void* v)
 	((GraphicalUI*)(o->user_data()))->m_nAASampleSqrt=int( ((Fl_Slider *)o)->value() );
 }
 
+void GraphicalUI::cb_multiThreadSlides(Fl_Widget* o, void* v)
+{
+	((GraphicalUI*)(o->user_data()))->m_nMultiThreadSqrt=int( ((Fl_Slider *)o)->value() );
+}
+
 void GraphicalUI::cb_save_image(Fl_Menu_* o, void* v) 
 {
 	pUI = whoami(o);
@@ -194,18 +199,16 @@ void GraphicalUI::cb_render(Fl_Widget* o, void* v) {
 		clock_t intervalMS = pUI->refreshInterval * 100;
 
 		// Handle tracing via multiple threads if possible
-		const int num_threads = std::thread::hardware_concurrency();
+		std::vector<std::thread> trace_threads;
+		const int num_threads_sqrt = m_nMultiThreadSqrt;
 
-		// Can we even use multiple-threads?
-		if (num_threads > 1)
+		// Do we even want to use multiple threads?
+		if (num_threads_sqrt > 1)
 		{
 			// We need to break up the image into a grid of regions where there are the same number of regions for length and height
 			// Each region is handled by a thread so that each thread has approximately the same amount of work (edge regions may be larger)
-			const int num_threads_sqrt = sqrt(num_threads);
 			const int x_thread_sample_inc = width / num_threads_sqrt;
 			const int y_thread_sample_inc = height / num_threads_sqrt;
-
-			std::vector<std::thread> trace_threads;
 
 			// Create a thread to handle ray tracing for each region
 			for (int y_thread_sample = 0; y_thread_sample < num_threads_sqrt; ++y_thread_sample)
@@ -217,6 +220,11 @@ void GraphicalUI::cb_render(Fl_Widget* o, void* v) {
 				for (int x_thread_sample = 0; x_thread_sample < num_threads_sqrt; ++x_thread_sample)
 				{
 					bool not_last_column = (x_thread_sample != (num_threads_sqrt - 1));
+
+					// We want to save the last region for the current thread in order to use refresh intervals without having race conditions
+					if (!not_last_column && !not_last_row)
+						break;
+
 					int x_thread_sample_start = x_thread_sample * x_thread_sample_inc;
 					int x_thread_sample_end = (not_last_column ? x_thread_sample_start + x_thread_sample_inc : width); // Ensure that the last column region covers remaining pixels width-wise
 
@@ -224,55 +232,54 @@ void GraphicalUI::cb_render(Fl_Widget* o, void* v) {
 					trace_threads[i].push_back(thread(x_thread_sample_start, x_thread_sample_end, y_thread_sample_start, y_thread_sample_end));
 				}
 			}
+		}
 
-			// Wait for all threads to finish
-			for (int i = 0; i < num_threads; ++i)
+		// Current thread takes care of final region
+		int start_y = (num_threads_sqrt - 1) * y_thread_sample_inc;
+		int start_x = (num_threads_sqrt - 1) * x_thread_sample_inc;
+		for (int y = start_y; y < height; ++y)
+		{
+			for (int x = start_x; x < width; ++x)
 			{
-				// Can't exactly use the refresh rate here so I'll just have to refresh every time a thread finishes
-				sprintf(buffer, "(%d%%) %s", (int)((double)i / (double)num_threads * 100.0), old_label);
-			    pUI->m_traceGlWindow->label(buffer);
-			    pUI->m_traceGlWindow->refresh();
-			    Fl::check();
-			    
-			    if (Fl::damage())
-			    	Fl::flush();
+				if (stopTrace) 
+					break;
 
-			    // Wait for thread to finish
-				trace_threads[i].join();
+				// check for input and refresh view every so often while tracing
+				now = clock();
+				if ((now - prev)/CLOCKS_PER_SEC * 1000 >= intervalMS)
+		  		{
+		    		prev = now;
+				    sprintf(buffer, "(%d%%) %s", (int)((double)y / (double)height * 100.0), old_label);
+				    pUI->m_traceGlWindow->label(buffer);
+				    pUI->m_traceGlWindow->refresh();
+				    Fl::check();
+
+				    if (Fl::damage())
+				    	Fl::flush();
+				}
+
+				// look for input and refresh window
+				pUI->raytracer->tracePixel(x, y);
+				pUI->m_debuggingWindow->m_debuggingView->setDirty();
+	      	}
+
+	    	if (stopTrace) 
+	    		break;
 			}
 		}
-		else
+
+		// Wait for all threads to finish
+		for (int i = 0; i < ((num_threads_sqrt * num_threads_sqrt) - 1); ++i)
 		{
-			// Regular single-thread ray tracing
-			for (int y = 0; y < height; y++)
-		  	{
-		    	for (int x = 0; x < width; x++)
-		      	{
-					if (stopTrace) 
-						break;
+			// Can't exactly use the refresh rate here so I'll just have to refresh every time a thread finishes
+		    pUI->m_traceGlWindow->refresh();
+		    Fl::check();
+		    
+		    if (Fl::damage())
+		    	Fl::flush();
 
-					// check for input and refresh view every so often while tracing
-					now = clock();
-					if ((now - prev)/CLOCKS_PER_SEC * 1000 >= intervalMS)
-			  		{
-			    		prev = now;
-					    sprintf(buffer, "(%d%%) %s", (int)((double)y / (double)height * 100.0), old_label);
-					    pUI->m_traceGlWindow->label(buffer);
-					    pUI->m_traceGlWindow->refresh();
-					    Fl::check();
-
-					    if (Fl::damage())
-					    	Fl::flush();
-					}
-
-					// look for input and refresh window
-					pUI->raytracer->tracePixel(x, y);
-					pUI->m_debuggingWindow->m_debuggingView->setDirty();
-		      	}
-
-		    	if (stopTrace) 
-		    		break;
-			}
+		    // Wait for thread to finish
+			trace_threads[i].join();
 		}
 
 		doneTrace = true;
@@ -291,7 +298,6 @@ void GraphicalUI::cb_stop(Fl_Widget* o, void* v)
 
 void traceThreadFunc(const int start_x, const int end_x, const int start_y, const int end_y);
 {
-	clock_t now, prev
 	for(int y = start_y; y < end_y; ++y)
 	{
 		for(int x = start_x; x < end_x; ++x)
@@ -418,7 +424,7 @@ GraphicalUI::GraphicalUI() : refreshInterval(10) {
 	m_aaSamplesSlider->labelfont(FL_COURIER);
 	m_aaSamplesSlider->labelsize(12);
 	m_aaSamplesSlider->minimum(1);
-	m_aaSamplesSlider->maximum(4); // Max sample count: 16
+	m_aaSamplesSlider->maximum(4); // Max AA sample count: 16
 	m_aaSamplesSlider->step(1);
 	m_aaSamplesSlider->value(m_nAASampleSqrt);
 	m_aaSamplesSlider->align(FL_ALIGN_RIGHT);
@@ -444,6 +450,19 @@ GraphicalUI::GraphicalUI() : refreshInterval(10) {
 	m_filterSlider->align(FL_ALIGN_RIGHT);
 	m_filterSlider->callback(cb_filterWidthSlides);
 	m_filterSlider->deactivate();
+
+	// multi-threading count filter
+	m_multiThreadSlider = new Fl_Value_Slider(10, 165, 180, 20, "Multi-Threading Factor");
+	m_multiThreadSlider->user_data((void*)(this));	// record self to be used by static callback functions
+	m_multiThreadSlider->type(FL_HOR_NICE_SLIDER);
+	m_multiThreadSlider->labelfont(FL_COURIER);
+	m_multiThreadSlider->labelsize(12);
+	m_multiThreadSlider->minimum(1);
+	m_multiThreadSlider->maximum(4); // Max thread count: 16
+	m_multiThreadSlider->step(1);
+	m_multiThreadSlider->value(m_nMultiThreadSqrt);
+	m_multiThreadSlider->align(FL_ALIGN_RIGHT);
+	m_multiThreadSlider->callback(cb_multiThreadSlides);
 
 	// cubemap chooser
 	m_cubeMapChooser = new CubeMapChooser();

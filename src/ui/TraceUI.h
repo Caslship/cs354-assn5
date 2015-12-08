@@ -21,7 +21,7 @@ public:
 	TraceUI() : m_nDepth(5), m_nSize(512), m_displayDebuggingInfo(false),
                     m_shadows(true), m_smoothshade(true), raytracer(0),
                     m_nFilterWidth(1), m_usingCubeMap(false), m_gotCubeMap(false),
-                    m_nAASampleSqrt(1)
+                    m_nAASampleSqrt(1), m_nMultiThreadSqrt(2)
                     {}
 
 	virtual int	run() = 0;
@@ -40,6 +40,7 @@ public:
 	int	getDepth() const { return m_nDepth; }
 	int		getFilterWidth() const { return m_nFilterWidth; }
 	int getAASampleSqrt() const { return m_nAASampleSqrt; }
+	int getMultiThreadSqrt() const { return m_nMultiThreadSqrt; }
 
 	bool	shadowSw() const { return m_shadows; }
 	bool	smShadSw() const { return m_smoothshade; }
@@ -54,6 +55,7 @@ protected:
 	int	m_nSize;	// Size of the traced image
 	int	m_nDepth;	// Max depth of recursion
 	int m_nAASampleSqrt; // Square root of the number of pixel samples to take for anti-aliasing
+	int m_nMultiThreadSqrt; // Square root of the number of threads to use when rendering
 
 	// Determines whether or not to show debugging information
 	// for individual rays.  Disabled by default for efficiency

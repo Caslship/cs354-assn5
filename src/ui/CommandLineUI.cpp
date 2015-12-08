@@ -74,14 +74,13 @@ int CommandLineUI::run()
 		clock_t start, end;
 
 		// Handle tracing via multiple threads if possible
-		const int num_threads = thread::hardware_concurrency();
+		const int num_threads_sqrt = max(m_nMultiThreadSqrt, (int)sqrt(thread::hardware_concurrency()));
 
-		// Can we even use multiple-threads?
-		if (num_threads > 1)
+		// Do we even want to use multiple threads?
+		if (num_threads_sqrt > 1)
 		{
 			// We need to break up the image into a grid of regions where there are the same number of regions for length and height
 			// Each region is handled by a thread so that each thread has approximately the same amount of work (edge regions may be larger)
-			const int num_threads_sqrt = sqrt(num_threads);
 			const int x_thread_sample_inc = width / num_threads_sqrt;
 			const int y_thread_sample_inc = height / num_threads_sqrt;
 

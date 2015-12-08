@@ -40,6 +40,7 @@ public:
 	Fl_Slider*			m_thresholdSlider;
 	Fl_Slider*			m_blockSlider;
 	Fl_Slider*			m_aaSamplesSlider;
+	Fl_Slider*			m_multiThreadSlider;
 	Fl_Slider*			m_aaThreshSlider;
 	Fl_Slider*			m_refreshSlider;
 	Fl_Slider*			m_treeDepthSlider;
@@ -96,6 +97,7 @@ private:
 	static void cb_refreshSlides(Fl_Widget* o, void* v);
 	static void cb_filterWidthSlides(Fl_Widget* o, void* v);
 	static void cb_aaSamplesSlides(Fl_Widget* o, void* v);
+	static void cb_multiThreadSlides(Fl_Widget* o, void* v);
 
 	static void cb_render(Fl_Widget* o, void* v);
 	static void cb_stop(Fl_Widget* o, void* v);

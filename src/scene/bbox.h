@@ -14,6 +14,25 @@ public:
 	BoundingBox() : bEmpty(true) {}
 	BoundingBox(Vec3d bMin, Vec3d bMax) : bmin(bMin), bmax(bMax), bEmpty(false), dirty(true) {}
 
+	int getLongestAxis() const 
+	{
+		int axis = 0;
+
+		Vec3d diff = bMax - bMin;
+		double max = diff[0];
+    	for (int i = 1; i < 3; i++)
+    	{
+    		if (diff[i] > max)
+    		{
+    			max = diff[i];
+    			axis = i;
+    		}
+        }
+
+    	return axis;
+	}
+
+	Vec3d getCenter() const { return ((bmin + bmax) / 2.0); }
 	Vec3d getMin() const { return bmin; }
 	Vec3d getMax() const { return bmax; }
 	bool isEmpty() { return bEmpty; }

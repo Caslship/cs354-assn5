@@ -31,15 +31,43 @@ class KdTree;
 {
 private:
   int _axis;
+  double _pivot;
   KdTree * _left;
   KdTree * _right;
-  BoundingBox * _bounds;
-  std::vector<Geometry *>  * _objects;
+  BoundingBox _bounds;
+  std::vector<Geometry *> * _objects;
 
 public:
-  KdTree(std::vector<Geometry *> objects, int depth = 0);
+  KdTree(std::vector<Geometry *>& objects, int depth = 0);
   bool intersect(ray& r, isect& i) const;
-  void insert(Geometry * object);
+  bool isLeaf() const { return (!_left && !_right); }
+  std::vector<Geometry *>& getObjects() const { return _objects; }
+  double getPivot() const { return _pivot; }
+  int getAxis() const { return _axis; }
+  KdTree * getLeft() const { return _left; }
+  KdTree * getRight() const { return _right; }
+};
+
+// Used for stack-based kd-tree traversal
+struct KDTStackElement
+{
+  KdTree * node;
+  double tmin;
+  double tmax;
+
+  KDTStackElement(KdTree * node, double tmin, double tmax)
+  {
+    this->node = node;
+    this->tmin = tmin;
+    this->tmax = tmax;
+  }
+
+  void setParams(KdTree * node, double tmin, double tmax)
+  {
+    this->node = node;
+    this->tmin = tmin;
+    this->tmax = tmax; 
+  }
 };
 
 class SceneElement {
@@ -180,6 +208,8 @@ public:
   // default method for ComputeLocalBoundingBox returns a bogus bounding box;
   // this should be overridden if hasBoundingBoxCapability() is true.
   virtual BoundingBox ComputeLocalBoundingBox() { return BoundingBox(); }
+
+  virtual bool isTrimesh() const { return false; }
 
   void setTransform(TransformNode *transform) { this->transform = transform; };
     

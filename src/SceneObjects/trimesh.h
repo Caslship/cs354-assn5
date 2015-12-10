@@ -50,6 +50,7 @@ public:
     
     void generateNormals();
 
+    bool isTrimesh() const { return true; }
     bool hasBoundingBoxCapability() const { return true; }
       
     BoundingBox ComputeLocalBoundingBox()

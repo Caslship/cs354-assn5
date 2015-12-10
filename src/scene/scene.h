@@ -39,6 +39,7 @@ private:
 
 public:
   KdTree(std::vector<Geometry *>& objects, int depth = 0);
+  ~KdTree();
   bool intersect(ray& r, isect& i) const;
   bool isLeaf() const { return (!_left && !_right); }
   std::vector<Geometry *>& getObjects() const { return _objects; }
@@ -271,7 +272,7 @@ public:
 
   TransformRoot transformRoot;
 
-  Scene() : transformRoot(), objects(), lights() {}
+  Scene() : transformRoot(), objects(), lights(), kdtree(NULL) {}
   virtual ~Scene();
 
   void add( Geometry* obj ) {

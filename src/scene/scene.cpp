@@ -35,8 +35,8 @@ KdTree::KdTree(std::vector<Geometry *>& objects, int depth) : _bounds(Vec3d(0, 0
 	}
 
 	// Split kd-tree by midpoint: https://blog.frogslayer.com/kd-trees-for-faster-ray-tracing-with-triangles/
-	std::vector<Geometry *> left_objects;
-	std::vector<Geometry *> right_objects;
+	vector<Geometry *> left_objects;
+	vector<Geometry *> right_objects;
 	_axis = _bounds.getLongestAxis();
 	_pivot = _bounds.getCenter()[_axis];
 
@@ -55,6 +55,16 @@ KdTree::KdTree(std::vector<Geometry *>& objects, int depth) : _bounds(Vec3d(0, 0
 	// Add another depth level
 	_left = new KdTree(left_objects, depth + 1);
 	_right = new KdTree(right_objects, depth + 1);
+}
+
+KdTree::~KdTree()
+{
+	if (_left)
+		delete _left;
+	if (_right)
+		delete _right;
+	if (_objects)
+		delete _objects;
 }
 
 bool KdTree::intersect(ray& r, isect& i) const
@@ -139,11 +149,6 @@ bool KdTree::intersect(ray& r, isect& i) const
 	return intersection_found;
 }
 
-void Scene::buildKdTree()
-{
-	kdTree = new KdTree(objects, 0);
-}
-
 bool Geometry::intersect(ray& r, isect& i) const {
 	double tmin, tmax;
 	if (hasBoundingBoxCapability() && !(bounds.intersect(r, tmin, tmax))) return false;
@@ -185,9 +190,39 @@ Scene::~Scene() {
     giter g;
     liter l;
     tmap::iterator t;
+    delete kdtree;
     for( g = objects.begin(); g != objects.end(); ++g ) delete (*g);
     for( l = lights.begin(); l != lights.end(); ++l ) delete (*l);
     for( t = textureCache.begin(); t != textureCache.end(); t++ ) delete (*t).second;
+}
+
+void Scene::buildKdTree()
+{
+	if (kdtree != NULL)
+		delete kdtree;
+
+	vector<Geometry *> all_objects;
+	int num_objects = objects.size();
+
+	// As suggested by Don Fussell, I'm breaking down any trimesh objects I encounter so that I have individual triangles
+	for (int i = 0; i < num_objects; ++i)
+	{
+		// If we encounter a trimesh, add its individual triangles to the object list instead
+		if (objects[i]->isTrimesh())
+		{
+			// Grab triangles
+			vector<Geometry *> faces = objects[i]->getFaces();
+			int num_faces = faces.size();
+
+			// Add to list for kd-tree
+			for (int j = 0; j < num_faces; ++j)
+				all_objects.push_back(faces[j]);
+		}
+		else
+			all_objects.push_back(objects[i]);
+	}
+
+	kdTree = new KdTree(all_objects, 0);
 }
 
 // Get any intersection with an object.  Return information about the 

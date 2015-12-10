@@ -37,6 +37,7 @@ public:
     bool vertNorms;
 
     bool intersectLocal(ray& r, isect& i) const;
+    const Faces getFaces() const { return faces; }
 
     ~Trimesh();
     

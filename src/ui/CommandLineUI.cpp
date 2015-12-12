@@ -52,7 +52,7 @@ CommandLineUI::CommandLineUI( int argc, char* const* argv )
 	imgName = argv[optind+1];
 }
 
-void CommandLineUI::traceThreadFunc(const int start_x, const int end_x, const int start_y, const int end_y)
+void traceThreadFunc(const int start_x, const int end_x, const int start_y, const int end_y, RayTracer * raytracer)
 {
 	for(int y = start_y; y < end_y; ++y)
 		for(int x = start_x; x < end_x; ++x)
@@ -102,11 +102,12 @@ int CommandLineUI::run()
 					int x_thread_sample_end = (not_last_column ? x_thread_sample_start + x_thread_sample_inc : width); // Ensure that the last column region covers remaining pixels width-wise
 
 					// Run thread given bounds for region
-					trace_threads[i].push_back(thread(x_thread_sample_start, x_thread_sample_end, y_thread_sample_start, y_thread_sample_end));
+					trace_threads.push_back(thread(traceThreadFunc, x_thread_sample_start, x_thread_sample_end, y_thread_sample_start, y_thread_sample_end, raytracer));
 				}
 			}
 
 			// Wait for all threads to finish
+			const int num_threads = num_threads_sqrt * num_threads_sqrt;
 			for (int i = 0; i < num_threads; ++i)
 				trace_threads[i].join();
 

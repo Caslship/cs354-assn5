@@ -1,27 +1,17 @@
 #
 #  Makefile for fltk applications
 #
-ifneq (,$(findstring WINDOWS,$(PATH)))
-	UNAME := Windows
-else
-	UNAME := $(shell uname -s)
-endif
 
-FLTK_LIBS = -lfltk -lfltk_gl -lfltk_images -lfltk_forms
+FLTK_LIBS = -lfltk -lfltk_gl -lfltk_images -lfltk_forms -lpng -lz
+X_LIBS = -lXext -lX11 -lXfixes
+OPENGL_LIBS = -L/usr/lib/nvidia-340-updates -lGL -lGLU
 OTHER_LIBS = -lm -lpthread -ldl
-ifeq ($(UNAME),Linux)
-	FLTK_LIBS += -lpng -lz
-	X_LIBS = -lXext -lX11 -lXfixes
-	OPENGL_LIBS = -L/usr/lib/nvidia-340 -L/usr/lib/nvidia-340-updates -lGL -lGLU
-endif
-ifeq ($(UNAME),Windows)
-	FLTK_LIBS += -lfltk_png -lfltk_z
-	OPENGL_LIBS = -lopengl32 -lglu32
-endif
 
 LIBS = $(FLTK_LIBS) $(X_LIBS) $(OPENGL_LIBS) $(OTHER_LIBS)
 
 CFLAGS = -g -std=c++11
+
+CC = g++
 
 .SUFFIXES: .o .cpp .cxx
 

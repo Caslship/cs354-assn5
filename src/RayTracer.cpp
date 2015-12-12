@@ -260,7 +260,7 @@ bool RayTracer::loadScene( char* fn ) {
 
 	if( !sceneLoaded() ) return false;
 
-	scene->buildKdTree();
+	// scene->buildKdTree();
 
 	return true;
 }

@@ -18,7 +18,7 @@ public:
 	{
 		int axis = 0;
 
-		Vec3d diff = bMax - bMin;
+		Vec3d diff = bmax - bmin;
 		double max = diff[0];
     	for (int i = 1; i < 3; i++)
     	{

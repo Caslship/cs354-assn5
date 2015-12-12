@@ -39,10 +39,10 @@ class TextureMap {
        // do bilinear interpolation.
        Vec3d getPixelAt( int x, int y ) const;
 
-	   int getWidth() const { return width; }
-	   int getHeight() const { return height; }
+     int getWidth() const { return width; }
+     int getHeight() const { return height; }
 
-	  ~TextureMap() { if (data) delete[] data; }
+    ~TextureMap() { if (data) delete[] data; }
 
 protected:
        string filename;
@@ -52,12 +52,12 @@ protected:
 };
 
 class TextureMapException {
-	public:
-		TextureMapException( string errorMsg ) : _errorMsg( errorMsg ) {}
-		string message() { return _errorMsg; }
+  public:
+    TextureMapException( string errorMsg ) : _errorMsg( errorMsg ) {}
+    string message() { return _errorMsg; }
 
-	private:
-		string _errorMsg;
+  private:
+    string _errorMsg;
 };
 
 /*
@@ -135,7 +135,7 @@ public:
       _textureMap = 0;
     }
 
-	bool isZero() { return _value.iszero(); }
+  bool isZero() { return _value.iszero(); }
 
     Vec3d& operator+=( const Vec3d& rhs )
     {
@@ -146,9 +146,9 @@ public:
     Vec3d value( const isect& is ) const;
     double intensityValue( const isect& is ) const;
 
-	// Use this to determine if the particular parameter is
-	// mapped; use this to determine if we need to somehow renormalize.
-	bool mapped() const { return _textureMap != 0; }
+  // Use this to determine if the particular parameter is
+  // mapped; use this to determine if we need to somehow renormalize.
+  bool mapped() const { return _textureMap != 0; }
 
 private:
     Vec3d _value;
@@ -166,17 +166,19 @@ public:
         , _kd( Vec3d( 0.0, 0.0, 0.0 ) )
         , _kr( Vec3d( 0.0, 0.0, 0.0 ) )
         , _kt( Vec3d( 0.0, 0.0, 0.0 ) )
-		, _refl(0)
-		, _trans(0)
+    , _refl(0)
+    , _trans(0)
         , _shininess( 0.0 ) 
-		, _index(1.0) {}
+    , _index(1.0) {}
 
     Material( const Vec3d& e, const Vec3d& a, const Vec3d& s, 
               const Vec3d& d, const Vec3d& r, const Vec3d& t, double sh, double in )
         : _ke( e ), _ka( a ), _ks( s ), _kd( d ), _kr( r ), _kt( t ), 
           _shininess( Vec3d(sh,sh,sh) ), _index( Vec3d(in,in,in) ) { setBools(); }
 
-	virtual Vec3d shade( Scene *scene, const ray& r, const isect& i ) const;
+  virtual Vec3d shade( Scene *scene, const ray& r, const isect& i ) const;
+
+
     
     Material &
     operator+=( const Material &m )
@@ -205,12 +207,12 @@ public:
     Vec3d kr( const isect& i ) const { return _kr.value(i); }
     Vec3d kt( const isect& i ) const { return _kt.value(i); }
     double shininess( const isect& i ) const
-	{
-		// Have to renormalize into the range 0-128 if it's texture mapped.
-		return _shininess.mapped() ? 
-			128.0*_shininess.intensityValue(i) :
-			_shininess.intensityValue(i);
-	}
+  {
+    // Have to renormalize into the range 0-128 if it's texture mapped.
+    return _shininess.mapped() ? 
+      128.0*_shininess.intensityValue(i) :
+      _shininess.intensityValue(i);
+  }
 
     double index( const isect& i ) const { return _index.intensityValue(i); }
 
@@ -237,12 +239,12 @@ public:
                                                                { _shininess = shininess; }
     void setIndex( const MaterialParameter& index )            { _index = index; }
 
-	// get booleans for reflection and refraction
-	bool Refl() const { return _refl; }
-	bool Trans() const { return _trans; }
-	bool Recur() const { return _recur; }
-	bool Spec() const { return _spec; }
-	bool Both() const { return _both; }
+  // get booleans for reflection and refraction
+  bool Refl() const { return _refl; }
+  bool Trans() const { return _trans; }
+  bool Recur() const { return _recur; }
+  bool Spec() const { return _spec; }
+  bool Both() const { return _both; }
 
 private:
     MaterialParameter _ke;                    // emissive
@@ -252,22 +254,22 @@ private:
     MaterialParameter _kr;                    // reflective
     MaterialParameter _kt;                    // transmissive
 
-	bool _refl;								  // specular reflector?
-	bool _trans;							  // specular transmitter?
-	bool _recur;							  // either one
-	bool _spec;								  // any kind of specular?
-	bool _both;								  // reflection and transmission
+  bool _refl;                 // specular reflector?
+  bool _trans;                // specular transmitter?
+  bool _recur;                // either one
+  bool _spec;                 // any kind of specular?
+  bool _both;                 // reflection and transmission
     
     MaterialParameter _shininess;
     MaterialParameter _index;                 // index of refraction
 
-	void setBools() {
-		_refl = !_kr.isZero();
-		_trans = !_kt.isZero();
-		_recur = _refl || _trans;
-		_spec = _refl || !_ks.isZero();
-		_both = _refl && _trans;
-	}
+  void setBools() {
+    _refl = !_kr.isZero();
+    _trans = !_kt.isZero();
+    _recur = _refl || _trans;
+    _spec = _refl || !_ks.isZero();
+    _both = _refl && _trans;
+  }
 
 };
 

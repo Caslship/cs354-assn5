@@ -27,49 +27,6 @@
 class Light;
 class Scene;
 
-class KdTree;
-{
-private:
-  int _axis;
-  double _pivot;
-  KdTree * _left;
-  KdTree * _right;
-  BoundingBox _bounds;
-  std::vector<Geometry *> * _objects;
-
-public:
-  KdTree(std::vector<Geometry *>& objects, int depth = 0);
-  ~KdTree();
-  bool intersect(ray& r, isect& i) const;
-  bool isLeaf() const { return (!_left && !_right); }
-  std::vector<Geometry *>& getObjects() const { return _objects; }
-  double getPivot() const { return _pivot; }
-  int getAxis() const { return _axis; }
-  KdTree * getLeft() const { return _left; }
-  KdTree * getRight() const { return _right; }
-};
-
-// Used for stack-based kd-tree traversal
-struct KDTStackElement
-{
-  KdTree * node;
-  double tmin;
-  double tmax;
-
-  KDTStackElement(KdTree * node, double tmin, double tmax)
-  {
-    this->node = node;
-    this->tmin = tmin;
-    this->tmax = tmax;
-  }
-
-  void setParams(KdTree * node, double tmin, double tmax)
-  {
-    this->node = node;
-    this->tmin = tmin;
-    this->tmax = tmax; 
-  }
-};
 
 class SceneElement {
 
@@ -260,6 +217,43 @@ protected:
    : SceneObject(scene), material(mat) {}
 
   Material* material;
+};
+
+class KdTree
+{
+private:
+  int _axis;
+  double _pivot;
+  KdTree * _left;
+  KdTree * _right;
+  BoundingBox _bounds;
+  std::vector<Geometry *> * _objects;
+
+public:
+  KdTree(std::vector<Geometry *>& objects, int depth = 0);
+  ~KdTree();
+  bool intersect(ray& r, isect& i);
+  bool isLeaf() { return (!_left && !_right); }
+  std::vector<Geometry *> * getObjects() { return _objects; }
+  double getPivot() { return _pivot; }
+  int getAxis() { return _axis; }
+  KdTree * getLeft() { return _left; }
+  KdTree * getRight() { return _right; }
+};
+
+// Used for stack-based kd-tree traversal
+struct KDTStackElement
+{
+  KdTree * node;
+  double tmin;
+  double tmax;
+
+  KDTStackElement(KdTree * node, double tmin, double tmax)
+  {
+    this->node = node;
+    this->tmin = tmin;
+    this->tmax = tmax;
+  }
 };
 
 class Scene {

@@ -174,7 +174,21 @@ void GraphicalUI::cb_debuggingDisplayCheckButton(Fl_Widget* o, void* v)
 	  }
 }
 
+void traceThreadFunc(const int start_x, const int end_x, const int start_y, const int end_y, GraphicalUI * pUI)
+{
+	for(int y = start_y; y < end_y; ++y)
+	{
+		for(int x = start_x; x < end_x; ++x)
+		{
+			if (pUI->stopTrace) break;
 
+			pUI->raytracer->tracePixel(x, y);
+			pUI->m_debuggingWindow->m_debuggingView->setDirty();
+		}
+
+		if (pUI->stopTrace) break;
+	}
+}
 
 void GraphicalUI::cb_render(Fl_Widget* o, void* v) {
 
@@ -200,15 +214,17 @@ void GraphicalUI::cb_render(Fl_Widget* o, void* v) {
 
 		// Handle tracing via multiple threads if possible
 		std::vector<std::thread> trace_threads;
-		const int num_threads_sqrt = m_nMultiThreadSqrt;
+		const int num_threads_sqrt = pUI->m_nMultiThreadSqrt;
 
 		// Do we even want to use multiple threads?
+		const int x_thread_sample_inc = width / num_threads_sqrt;
+		const int y_thread_sample_inc = height / num_threads_sqrt;
 		if (num_threads_sqrt > 1)
 		{
 			// We need to break up the image into a grid of regions where there are the same number of regions for length and height
 			// Each region is handled by a thread so that each thread has approximately the same amount of work (edge regions may be larger)
-			const int x_thread_sample_inc = width / num_threads_sqrt;
-			const int y_thread_sample_inc = height / num_threads_sqrt;
+			// const int x_thread_sample_inc = width / num_threads_sqrt;
+			// const int y_thread_sample_inc = height / num_threads_sqrt;
 
 			// Create a thread to handle ray tracing for each region
 			for (int y_thread_sample = 0; y_thread_sample < num_threads_sqrt; ++y_thread_sample)
@@ -229,7 +245,7 @@ void GraphicalUI::cb_render(Fl_Widget* o, void* v) {
 					int x_thread_sample_end = (not_last_column ? x_thread_sample_start + x_thread_sample_inc : width); // Ensure that the last column region covers remaining pixels width-wise
 
 					// Run thread given bounds for region
-					trace_threads[i].push_back(thread(x_thread_sample_start, x_thread_sample_end, y_thread_sample_start, y_thread_sample_end));
+					trace_threads.push_back(std::thread(traceThreadFunc, x_thread_sample_start, x_thread_sample_end, y_thread_sample_start, y_thread_sample_end, pUI));
 				}
 			}
 		}
@@ -265,11 +281,11 @@ void GraphicalUI::cb_render(Fl_Widget* o, void* v) {
 
 	    	if (stopTrace) 
 	    		break;
-			}
 		}
 
 		// Wait for all threads to finish
-		for (int i = 0; i < ((num_threads_sqrt * num_threads_sqrt) - 1); ++i)
+		const int num_threads = num_threads_sqrt * num_threads_sqrt;
+		for (int i = 0; i < (num_threads - 1); ++i)
 		{
 			// Can't exactly use the refresh rate here so I'll just have to refresh every time a thread finishes
 		    pUI->m_traceGlWindow->refresh();
@@ -294,22 +310,6 @@ void GraphicalUI::cb_stop(Fl_Widget* o, void* v)
 {
 	pUI = (GraphicalUI*)(o->user_data());
 	stopTracing();
-}
-
-void traceThreadFunc(const int start_x, const int end_x, const int start_y, const int end_y);
-{
-	for(int y = start_y; y < end_y; ++y)
-	{
-		for(int x = start_x; x < end_x; ++x)
-		{
-			if (stopTrace) break;
-
-			pUI->raytracer->tracePixel(x, y);
-			pUI->m_debuggingWindow->m_debuggingView->setDirty();
-		}
-
-		if (stopTrace) break;
-	}
 }
 
 int GraphicalUI::run()

@@ -25,9 +25,9 @@ class ModelerView;
 class GraphicalUI : public TraceUI {
 public:
 	GraphicalUI();
+	friend void traceThreadFunc(const int start_x, const int end_x, const int start_y, const int end_y, GraphicalUI * pUI);
 
 	int run();
-	void traceThreadFunc(const int start_x, const int end_x, const int start_y, const int end_y);
 
 	void alert( const string& msg );
 

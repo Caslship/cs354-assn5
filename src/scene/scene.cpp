@@ -80,24 +80,23 @@ void Scene::buildKdTree()
 bool Scene::intersect(ray& r, isect& i) const {
 
 	bool have_one = false;
-	if (kdtree)
+	if (kdtree /* && TraceUI::m_useKdTree */)
 		have_one = kdtree->intersect(r, i);
-	// else
-	// {
-	// 	cout << "Default tracer" << endl;
-	// 	double tmin = 0.0;
-	// 	double tmax = 0.0;
-	// 	typedef vector<Geometry*>::const_iterator iter;
-	// 	for(iter j = objects.begin(); j != objects.end(); ++j) {
-	// 		isect cur;
-	// 		if( (*j)->intersect(r, cur) ) {
-	// 			if(!have_one || (cur.t < i.t)) {
-	// 				i = cur;
-	// 				have_one = true;
-	// 			}
-	// 		}
-	// 	}
-	// }
+	else
+	{
+		double tmin = 0.0;
+		double tmax = 0.0;
+		typedef vector<Geometry*>::const_iterator iter;
+		for(iter j = objects.begin(); j != objects.end(); ++j) {
+			isect cur;
+			if( (*j)->intersect(r, cur) ) {
+				if(!have_one || (cur.t < i.t)) {
+					i = cur;
+					have_one = true;
+				}
+			}
+		}
+	}
 
 	if(!have_one) i.setT(1000.0);
 

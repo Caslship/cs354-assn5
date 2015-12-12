@@ -263,20 +263,24 @@ public:
       return;
     }
 
-    // Split kd-tree by midpoint: https://blog.frogslayer.com/kd-trees-for-faster-ray-tracing-with-triangles/
+    // Split kd-tree by midpoint of longest axis: https://blog.frogslayer.com/kd-trees-for-faster-ray-tracing-with-triangles/
     std::vector<T*> left_objects;
     std::vector<T*> right_objects;
-    _pivot = _bounds.getCenter()[_axis];
     _axis = _bounds.getLongestAxis();
+    _pivot = _bounds.getCenter()[_axis];
 
     for (int iter = 0; iter < num_objects; ++iter)
     {
+      // Using min and max points of the partitioning axis to find which nodes to be placed in
       double min_wrt_axis = objects[iter]->getBoundingBox().getMin()[_axis];
       double max_wrt_axis = objects[iter]->getBoundingBox().getMax()[_axis];
 
+      // If min point is less than pivot then it should obviously be placed int the left node
       if (min_wrt_axis < _pivot)
       {
         left_objects.push_back(objects[iter]);
+
+        // However, the object still has the chance of being in the right node, too, if the max point is at or above the pivot
         if (max_wrt_axis >= _pivot)
           right_objects.push_back(objects[iter]);
       }
@@ -310,8 +314,11 @@ public:
   {
     double tmin;
     double tmax;
+
+    // Do we even hit the nodes bounding box?
     if (_bounds.intersect(r, tmin, tmax))
     {
+      // Recurse down tree until we hit leaf nodes
       if (!isLeaf())
       {
         bool intersected_left_node = _left->intersect(r, i);
@@ -321,6 +328,7 @@ public:
       }
       else
       {
+        // See if we intersect any contained in leaf nodes
         bool intersection_found = false;
         int num_objects = _objects->size();
         for(int j = 0; j != num_objects; ++j) 

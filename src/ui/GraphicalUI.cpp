@@ -215,16 +215,14 @@ void GraphicalUI::cb_render(Fl_Widget* o, void* v) {
 		// Handle tracing via multiple threads if possible
 		std::vector<std::thread> trace_threads;
 		const int num_threads_sqrt = pUI->m_nMultiThreadSqrt;
-
-		// Do we even want to use multiple threads?
 		const int x_thread_sample_inc = width / num_threads_sqrt;
 		const int y_thread_sample_inc = height / num_threads_sqrt;
+
+		// Do we even want to use multiple threads?
 		if (num_threads_sqrt > 1)
 		{
 			// We need to break up the image into a grid of regions where there are the same number of regions for length and height
 			// Each region is handled by a thread so that each thread has approximately the same amount of work (edge regions may be larger)
-			// const int x_thread_sample_inc = width / num_threads_sqrt;
-			// const int y_thread_sample_inc = height / num_threads_sqrt;
 
 			// Create a thread to handle ray tracing for each region
 			for (int y_thread_sample = 0; y_thread_sample < num_threads_sqrt; ++y_thread_sample)

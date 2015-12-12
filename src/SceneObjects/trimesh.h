@@ -37,7 +37,16 @@ public:
     bool vertNorms;
 
     bool intersectLocal(ray& r, isect& i) const;
-    const Faces getFaces() const { return faces; }
+    std::vector<Geometry *> getFaces() 
+    {
+        std::vector<Geometry *> geom_faces;
+        int num_faces = faces.size();
+
+        for (int i = 0; i < num_faces; ++i)
+            geom_faces.push_back((Geometry *)faces[i]);
+
+        return geom_faces; 
+    }
 
     ~Trimesh();
     
@@ -82,13 +91,6 @@ class TrimeshFace : public MaterialSceneObject
     int ids[3];
     Vec3d normal;
     double dist;
-    Vec3d u;
-    Vec3d v;
-    double u_dot_u;
-    double v_dot_v;
-    double u_dot_v;
-    double tri_area;
-    bool zero_area_flag;
 
 public:
     TrimeshFace( Scene *scene, Material *mat, Trimesh *parent, int a, int b, int c)
@@ -107,15 +109,6 @@ public:
 		Vec3d vab = (b_coords - a_coords);
 		Vec3d vac = (c_coords - a_coords);
 		Vec3d vcb = (b_coords - c_coords);
-
-        // Precompute these values for ray-triangle intersection
-        u = vab;
-        v = vac;
-        u_dot_v = u * v;
-        u_dot_u = u.length2();
-        v_dot_v = v.length2();
-        tri_area = (u_dot_v * u_dot_v) - (u_dot_u * v_dot_v);
-        zero_area_flag = (abs(tri_area) < RAY_EPSILON);
         
         // Compute normal
 		if (vab.iszero() || vac.iszero() || vcb.iszero()) degen = true;

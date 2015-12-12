@@ -97,10 +97,6 @@ bool TrimeshFace::intersectLocal(ray& r, isect& i) const
     // YOUR CODE HERE
 
     // Following code is based on this article: http://geomalgorithms.com/a06-_intersect-2.html
-    // Unlikely for this to happen, but an area of zero implies that the ray never intersects
-    if (zero_area_flag)
-        return false;
-
     // Check to see if we intersect with the plane that the triangle resides in
     double cos_plane_r =  normal * (r.d);
 
@@ -116,9 +112,19 @@ bool TrimeshFace::intersectLocal(ray& r, isect& i) const
         return false;
 
     // We intersect the plane, now find if the point intersects with the triangle
+    Vec3d u = b - a;
+    Vec3d v = c - a;
     Vec3d w = ((r.p + r.d * t) - a);
+    double u_dot_v = u * v;
+    double u_dot_u = u.length2();
+    double v_dot_v = v.length2();
     double w_dot_v = w * v;
     double w_dot_u = w * u;
+
+    double tri_area = (u_dot_v * u_dot_v) - (u_dot_u * v_dot_v);
+
+    if (abs(tri_area) < RAY_EPSILON)
+        return false;
 
     // Compute barycentric coordinates of intersection point
     double beta = ((u_dot_v * w_dot_v) - (v_dot_v * w_dot_u)) / tri_area;

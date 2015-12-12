@@ -123,6 +123,12 @@ public:
   const BoundingBox& getBoundingBox() const { return bounds; }
   Vec3d getNormal() { return Vec3d(1.0, 0.0, 0.0); }
 
+  virtual std::vector<Geometry *> getFaces() 
+  {
+    std::vector<Geometry *> empty;
+    return empty; 
+  }
+
   virtual void ComputeBoundingBox() {
     // take the object's local bounding box, transform all 8 points on it,
     // and use those to find a new bounding box.
@@ -249,6 +255,13 @@ struct KDTStackElement
   double tmax;
 
   KDTStackElement(KdTree * node, double tmin, double tmax)
+  {
+    this->node = node;
+    this->tmin = tmin;
+    this->tmax = tmax;
+  }
+
+  void setParams(KdTree * node, double tmin, double tmax)
   {
     this->node = node;
     this->tmin = tmin;

@@ -4,6 +4,7 @@
 #include <assert.h>
 #include "trimesh.h"
 #include "../ui/TraceUI.h"
+#include "../scene/bbox.h"
 extern TraceUI* traceUI;
 
 using namespace std;
@@ -61,24 +62,70 @@ char* Trimesh::doubleCheck()
 
 bool Trimesh::intersectLocal(ray& r, isect& i) const
 {
-	double tmin = 0.0;
-	double tmax = 0.0;
-	typedef Faces::const_iterator iter;
 	bool have_one = false;
-	for( iter j = faces.begin(); j != faces.end(); ++j )
-	  {
-	    isect cur;
-	    if( (*j)->intersectLocal( r, cur ) )
-	      {
-		if( !have_one || (cur.t < i.t) )
-		  {
-		    i = cur;
-		    have_one = true;
-		  }
-	      }
-	  }
+
+    if (kdtree)
+        have_one = kdtree->intersect(r, i);
+    // else
+    // {
+    //     double tmin = 0.0;
+    //     double tmax = 0.0;
+    //     typedef Faces::const_iterator iter;
+    //     for( iter j = faces.begin(); j != faces.end(); ++j )
+    //     {
+    //         isect cur;
+    //         if( (*j)->intersectLocal( r, cur ) )
+    //         {
+    //             if( !have_one || (cur.t < i.t) )
+    //             {
+    //                 i = cur;
+    //                 have_one = true;
+    //             }
+    //         }
+    //     }
+    // }
 	if( !have_one ) i.setT(1000.0);
 	return have_one;
+}
+
+TrimeshFace::TrimeshFace( Scene *scene, Material *mat, Trimesh *parent, int a, int b, int c)
+        : MaterialSceneObject( scene, mat )
+{
+    this->parent = parent;
+    ids[0] = a;
+    ids[1] = b;
+    ids[2] = c;
+
+    // Compute the face normal here, not on the fly
+    Vec3d a_coords = parent->vertices[a];
+    Vec3d b_coords = parent->vertices[b];
+    Vec3d c_coords = parent->vertices[c];
+
+    Vec3d vab = (b_coords - a_coords);
+    Vec3d vac = (c_coords - a_coords);
+    Vec3d vcb = (b_coords - c_coords);
+    
+    // Compute normal
+    if (vab.iszero() || vac.iszero() || vcb.iszero()) degen = true;
+    else {
+        degen = false;
+        normal = ((b_coords - a_coords) ^ (c_coords - a_coords));
+        normal.normalize();
+        dist = normal * a_coords;
+    }
+    localbounds = ComputeLocalBoundingBox();
+    bounds = localbounds;
+}
+      
+BoundingBox TrimeshFace::ComputeLocalBoundingBox()
+{
+    BoundingBox localbounds;
+    localbounds.setMax(maximum( parent->vertices[ids[0]], parent->vertices[ids[1]]));
+    localbounds.setMin(minimum( parent->vertices[ids[0]], parent->vertices[ids[1]]));
+    
+    localbounds.setMax(maximum( parent->vertices[ids[2]], localbounds.getMax()));
+    localbounds.setMin(minimum( parent->vertices[ids[2]], localbounds.getMin()));
+    return localbounds;
 }
 
 bool TrimeshFace::intersect(ray& r, isect& i) const {

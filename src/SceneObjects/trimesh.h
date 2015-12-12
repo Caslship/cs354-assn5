@@ -8,7 +8,41 @@
 #include "../scene/material.h"
 #include "../scene/scene.h"
 
-class TrimeshFace;
+class Trimesh;
+
+class TrimeshFace : public MaterialSceneObject
+{
+    Trimesh *parent;
+    int ids[3];
+    Vec3d normal;
+    double dist;
+
+public:
+    TrimeshFace( Scene *scene, Material *mat, Trimesh *parent, int a, int b, int c);
+
+    BoundingBox localbounds;
+    bool degen;
+
+    int operator[]( int i ) const
+    {
+        return ids[i];
+    }
+
+    Vec3d getNormal()
+    {
+        return normal;
+    }
+
+    bool intersect(ray& r, isect& i ) const;
+    bool intersectLocal(ray& r, isect& i ) const;
+
+    bool hasBoundingBoxCapability() const { return true; }
+      
+    BoundingBox ComputeLocalBoundingBox();
+
+    const BoundingBox& getBoundingBox() const { return localbounds; }
+
+ };
 
 class Trimesh : public MaterialSceneObject
 {
@@ -24,11 +58,13 @@ class Trimesh : public MaterialSceneObject
     Materials materials;
 	BoundingBox localBounds;
 
+    KdTree<TrimeshFace> * kdtree;
+
 public:
     Trimesh( Scene *scene, Material *mat, TransformNode *transform )
         : MaterialSceneObject(scene, mat), 
 			displayListWithMaterials(0),
-			displayListWithoutMaterials(0)
+			displayListWithoutMaterials(0), kdtree(NULL)
     {
       this->transform = transform;
       vertNorms = false;
@@ -37,16 +73,6 @@ public:
     bool vertNorms;
 
     bool intersectLocal(ray& r, isect& i) const;
-    std::vector<Geometry *> getFaces() 
-    {
-        std::vector<Geometry *> geom_faces;
-        int num_faces = faces.size();
-
-        for (int i = 0; i < num_faces; ++i)
-            geom_faces.push_back((Geometry *)faces[i]);
-
-        return geom_faces; 
-    }
 
     ~Trimesh();
     
@@ -60,7 +86,15 @@ public:
     
     void generateNormals();
 
-    bool isTrimesh() const { return true; }
+    virtual bool isTrimesh() const { return true; }
+    virtual void buildKdTree()
+    {
+        if (kdtree)
+            delete kdtree;
+
+        kdtree = new KdTree<TrimeshFace>(faces, 0);
+    }
+
     bool hasBoundingBoxCapability() const { return true; }
       
     BoundingBox ComputeLocalBoundingBox()
@@ -84,75 +118,5 @@ protected:
 	mutable int displayListWithMaterials;
 	mutable int displayListWithoutMaterials;
 };
-
-class TrimeshFace : public MaterialSceneObject
-{
-    Trimesh *parent;
-    int ids[3];
-    Vec3d normal;
-    double dist;
-
-public:
-    TrimeshFace( Scene *scene, Material *mat, Trimesh *parent, int a, int b, int c)
-        : MaterialSceneObject( scene, mat )
-    {
-        this->parent = parent;
-        ids[0] = a;
-        ids[1] = b;
-        ids[2] = c;
-
-		// Compute the face normal here, not on the fly
-		Vec3d a_coords = parent->vertices[a];
-		Vec3d b_coords = parent->vertices[b];
-		Vec3d c_coords = parent->vertices[c];
-
-		Vec3d vab = (b_coords - a_coords);
-		Vec3d vac = (c_coords - a_coords);
-		Vec3d vcb = (b_coords - c_coords);
-        
-        // Compute normal
-		if (vab.iszero() || vac.iszero() || vcb.iszero()) degen = true;
-		else {
-			degen = false;
-			normal = ((b_coords - a_coords) ^ (c_coords - a_coords));
-			normal.normalize();
-			dist = normal * a_coords;
-		}
-		localbounds = ComputeLocalBoundingBox();
-		bounds = localbounds;
-    }
-
-	BoundingBox localbounds;
-	bool degen;
-
-    int operator[]( int i ) const
-    {
-        return ids[i];
-    }
-
-	Vec3d getNormal()
-	{
-		return normal;
-	}
-
-    bool intersect(ray& r, isect& i ) const;
-    bool intersectLocal(ray& r, isect& i ) const;
-
-    bool hasBoundingBoxCapability() const { return true; }
-      
-    BoundingBox ComputeLocalBoundingBox()
-    {
-        BoundingBox localbounds;
-        localbounds.setMax(maximum( parent->vertices[ids[0]], parent->vertices[ids[1]]));
-		localbounds.setMin(minimum( parent->vertices[ids[0]], parent->vertices[ids[1]]));
-        
-        localbounds.setMax(maximum( parent->vertices[ids[2]], localbounds.getMax()));
-		localbounds.setMin(minimum( parent->vertices[ids[2]], localbounds.getMin()));
-        return localbounds;
-    }
-
-    const BoundingBox& getBoundingBox() const { return localbounds; }
-
- };
 
 #endif // TRIMESH_H__

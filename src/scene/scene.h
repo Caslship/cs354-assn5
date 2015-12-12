@@ -174,6 +174,7 @@ public:
   virtual BoundingBox ComputeLocalBoundingBox() { return BoundingBox(); }
 
   virtual bool isTrimesh() const { return false; }
+  virtual void buildKdTree() {}
 
   void setTransform(TransformNode *transform) { this->transform = transform; };
     
@@ -225,47 +226,120 @@ protected:
   Material* material;
 };
 
+template <class T>
 class KdTree
 {
 private:
   int _axis;
   double _pivot;
-  KdTree * _left;
-  KdTree * _right;
+  KdTree<T> * _left;
+  KdTree<T> * _right;
   BoundingBox _bounds;
-  std::vector<Geometry *> * _objects;
+  std::vector<T*> * _objects;
 
 public:
-  KdTree(std::vector<Geometry *>& objects, int depth = 0);
-  ~KdTree();
-  bool intersect(ray& r, isect& i);
-  bool isLeaf() { return (!_left && !_right); }
-  std::vector<Geometry *> * getObjects() { return _objects; }
-  double getPivot() { return _pivot; }
-  int getAxis() { return _axis; }
-  KdTree * getLeft() { return _left; }
-  KdTree * getRight() { return _right; }
-};
-
-// Used for stack-based kd-tree traversal
-struct KDTStackElement
-{
-  KdTree * node;
-  double tmin;
-  double tmax;
-
-  KDTStackElement(KdTree * node, double tmin, double tmax)
+  KdTree(std::vector<T*>& objects, int depth = 0) : _bounds(Vec3d(0, 0, 0), Vec3d(0, 0, 0))
   {
-    this->node = node;
-    this->tmin = tmin;
-    this->tmax = tmax;
+    _objects = NULL;
+    _left = NULL;
+    _right = NULL;
+    _axis = 0;
+    _pivot = 0;
+
+    int num_objects = objects.size();
+
+    // Build bounding box for node
+    if (num_objects > 0)
+    {
+      _bounds = objects[0]->getBoundingBox();
+      for (int iter = 1; iter < num_objects; ++iter)
+        _bounds.merge(objects[iter]->getBoundingBox());
+    }
+
+    // Bottom out recursion after a certain amount of objects or a depth has been reached
+    if (num_objects <= 20 || depth >= 12)
+    {
+      _objects = new std::vector<T*>(objects);
+      return;
+    }
+
+    // Split kd-tree by midpoint: https://blog.frogslayer.com/kd-trees-for-faster-ray-tracing-with-triangles/
+    std::vector<T*> left_objects;
+    std::vector<T*> right_objects;
+    _pivot = _bounds.getCenter()[_axis];
+    _axis = _bounds.getLongestAxis();
+
+    for (int iter = 0; iter < num_objects; ++iter)
+    {
+      double min_wrt_axis = objects[iter]->getBoundingBox().getMin()[_axis];
+      double max_wrt_axis = objects[iter]->getBoundingBox().getMax()[_axis];
+
+      if (min_wrt_axis < _pivot)
+      {
+        left_objects.push_back(objects[iter]);
+        if (max_wrt_axis >= _pivot)
+          right_objects.push_back(objects[iter]);
+      }
+      else
+        right_objects.push_back(objects[iter]);
+    }
+
+    // Add another depth level
+    _left = new KdTree<T>(left_objects, depth + 1);
+    _right = new KdTree<T>(right_objects, depth + 1);
   }
 
-  void setParams(KdTree * node, double tmin, double tmax)
+  ~KdTree()
   {
-    this->node = node;
-    this->tmin = tmin;
-    this->tmax = tmax;
+    if (_left)
+      delete _left;
+    if (_right)
+      delete _right;
+    if (_objects)
+      delete _objects;
+  }
+
+  bool isLeaf() { return (!_left && !_right); }
+  std::vector<T*> * getObjects() { return _objects; }
+  double getPivot() { return _pivot; }
+  int getAxis() { return _axis; }
+  KdTree<T> * getLeft() { return _left; }
+  KdTree<T> * getRight() { return _right; }
+
+  bool intersect(ray& r, isect& i)
+  {
+    double tmin;
+    double tmax;
+    if (_bounds.intersect(r, tmin, tmax))
+    {
+      if (!isLeaf())
+      {
+        bool intersected_left_node = _left->intersect(r, i);
+        bool intersected_right_node = _right->intersect(r, i);
+
+        return (intersected_left_node || intersected_right_node);
+      }
+      else
+      {
+        bool intersection_found = false;
+        int num_objects = _objects->size();
+        for(int j = 0; j != num_objects; ++j) 
+        {
+          isect cur;
+          if((*_objects)[j]->intersect(r, cur)) 
+          {
+            if(!intersection_found || (cur.t < i.t)) 
+            {
+              i = cur;
+              intersection_found = true;
+            }
+          }
+        }
+        return intersection_found;
+      }
+    }
+    else
+      return false;
   }
 };
 
@@ -336,7 +410,7 @@ public:
   // are exempt from this requirement.
   BoundingBox sceneBounds;
   
-  KdTree * kdtree;
+  KdTree<Geometry> * kdtree;
 
  public:
   // This is used for debugging purposes only.

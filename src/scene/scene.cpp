@@ -90,7 +90,7 @@ bool Scene::intersect(ray& r, isect& i) const {
 
 	bool have_one = false;
 	if (kdtree && traceUI->usingKdTree())
-		have_one = kdtree->intersect(r, i, have_one);
+		kdtree->intersect(r, i, have_one); // Pass have_one in by reference
 	else
 	{
 		double tmin = 0.0;

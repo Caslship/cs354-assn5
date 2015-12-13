@@ -210,6 +210,9 @@ RayTracer::RayTracer()
 
 RayTracer::~RayTracer()
 {
+	if (cubemap)
+		delete cubemap;
+	
 	delete scene;
 	delete [] buffer;
 }

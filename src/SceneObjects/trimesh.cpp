@@ -75,7 +75,7 @@ bool Trimesh::intersectLocal(ray& r, isect& i) const
 	bool have_one = false;
 
     if (kdtree && traceUI->usingKdTree())
-        have_one = kdtree->intersect(r, i, have_one);
+        kdtree->intersect(r, i, have_one); // Pass have_one in by reference
     else
     {
         double tmin = 0.0;
@@ -94,7 +94,7 @@ bool Trimesh::intersectLocal(ray& r, isect& i) const
             }
         }
     }
-	if( !have_one ) i.setT(1000.0);
+	if(!have_one) i.setT(1000.0);
 	return have_one;
 }
 

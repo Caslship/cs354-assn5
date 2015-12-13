@@ -272,27 +272,13 @@ public:
 
     for (int i = 0; i < num_objects; ++i)
     {
-      // Using min and max points of the partitioning axis to find which nodes to be placed in
+      // Using center points of the partitioning axis to find which nodes objects should be placed in
       double center_wrt_axis = objects[i]->getBoundingBox().getCenter()[_axis];
-      // double min_wrt_axis = objects[i]->getBoundingBox().getMin()[_axis];
-      // double max_wrt_axis = objects[i]->getBoundingBox().getMax()[_axis];
 
       if (center_wrt_axis >= _pivot)
         right_objects.push_back(objects[i]);
       else
         left_objects.push_back(objects[i]);
-
-      // If min point is less than pivot then it should obviously be placed int the left node
-      // if (min_wrt_axis < _pivot)
-      // {
-      //   left_objects.push_back(objects[i]);
-
-      //   // However, the object still has the chance of being in the right node, too, if the max point is at or above the pivot
-      //   if (max_wrt_axis >= _pivot)
-      //     right_objects.push_back(objects[i]);
-      // }
-      // else
-      //   right_objects.push_back(objects[i]);
     }
 
     if (left_objects.empty() && !right_objects.empty()) left_objects = right_objects;
@@ -320,7 +306,7 @@ public:
   KdTree<T> * getLeft() { return _left; }
   KdTree<T> * getRight() { return _right; }
 
-  bool intersect(ray& r, isect& i, bool& have_one)
+  void intersect(ray& r, isect& i, bool& have_one)
   {
     double tmin;
     double tmax;
@@ -331,20 +317,19 @@ public:
       // Recurse down tree until we hit leaf nodes
       if (!isLeaf())
       {
-        bool intersected_left_node = _left->intersect(r, i, have_one);
-        bool intersected_right_node = _right->intersect(r, i, have_one);
-
-        return (intersected_left_node || intersected_right_node);
+        _left->intersect(r, i, have_one);
+        _right->intersect(r, i, have_one);
       }
       else
       {
         // See if we intersect any contained in leaf nodes
         int num_objects = _objects->size();
-        for(int j = 0; j != num_objects; ++j) 
+        isect cur;
+        for(int j = 0; j < num_objects; ++j) 
         {
-          isect cur;
           if((*_objects)[j]->intersect(r, cur)) 
           {
+            // We have to make sure that we haven't already hit something in another node
             if(!have_one || (cur.t < i.t)) 
             {
               i = cur;
@@ -352,112 +337,11 @@ public:
             }
           }
         }
-        return have_one;
       }
     }
-    else
-      return false;
-
-    // Stack-based traversal: http://www.keithlantz.net/2013/04/kd-tree-construction-using-the-surface-area-heuristic-stack-based-traversal-and-the-hyperplane-separation-theorem/
-    // double tmin;
-    // double tmax;
-    // bool intersection_found = false;
-
-    // // Do we even intersect with the node's bounding box?
-    // if (!_bounds.intersect(r, tmin, tmax))
-    //   return false;
-
-    // stack<KDTStackElement<T>> kdt_stack;
-    // KDTStackElement<T> kdt_stack_elem(this, tmin, tmax);
-    // kdt_stack.push(kdt_stack_elem);
-
-    // // Traverse kd-tree and find intersections if we have more nodes to traverse and if we haven't already found an intersection
-    // while(!kdt_stack.empty() && !intersection_found)
-    // {
-    //   kdt_stack_elem = kdt_stack.top();
-    //   kdt_stack.pop();
-    //   KdTree<T> * node = kdt_stack_elem.node;
-    //   tmin = kdt_stack_elem.tmin;
-    //   tmax = kdt_stack_elem.tmax;
-
-    //   // Traverse tree until we hit a leaf
-    //   while (!node->isLeaf())
-    //   {
-    //     // Don't want to make too many method calls
-    //     double pivot = node->getPivot();
-    //     double axis = node->getAxis();
-    //     KdTree<T> * left = node->getLeft();
-    //     KdTree<T> * right = node->getRight();
-
-    //     // Compute split intersection and designate near and far nodes
-    //     double pivot_diff_origin = pivot - r.p[axis];
-    //     double tstar = pivot_diff_origin / r.d[axis];
-    //     bool near_is_left = (pivot_diff_origin >= 0);
-    //     KdTree<T> * near = (near_is_left ? left : right);
-    //     KdTree<T> * far = (near_is_left ? right : left);
-
-    //     // Decide whether we should traverse near, far, or both
-    //     if (tstar >= tmax)
-    //       node = near;
-    //     else if (tstar <= tmin)
-    //       node = far;
-    //     else
-    //     {
-    //       // Push far on stack for later traversal
-    //       kdt_stack_elem.setParams(far, tstar, tmax);
-    //       kdt_stack.push(kdt_stack_elem);
-    //       node = near;
-    //       tmax = tstar;
-    //     }
-    //   }
-
-    //   // At leaf, find intersections with its objects
-    //   vector<T*> * node_objects = node->getObjects();
-    //   int num_node_objects = node_objects->size();
-    //   for (int iter = 0; iter < num_node_objects; ++iter)
-    //   {
-    //     isect cur;
-    //     if ((*node_objects)[iter]->intersect(r, cur))
-    //     {
-    //       if (!intersection_found || (cur.t < i.t))
-    //       {
-    //         i = cur;
-    //         intersection_found = true;
-    //       }
-    //     }
-    //   }
-
-    //   // If we fell outside of the scene boundaries then we obviously haven't hit anything
-    //   if (i.t > tmax)
-    //     intersection_found = false;
-    // }
-
-    // return intersection_found;
+    return;
   }
 };
-
-// Used for stack-based kd-tree traversal
-// template <class T>
-// struct KDTStackElement
-// {
-//   KdTree<T> * node;
-//   double tmin;
-//   double tmax;
-
-//   KDTStackElement(KdTree<T> * node, double tmin, double tmax)
-//   {
-//     this->node = node;
-//     this->tmin = tmin;
-//     this->tmax = tmax;
-//   }
-
-//   void setParams(KdTree<T> * node, double tmin, double tmax)
-//   {
-//     this->node = node;
-//     this->tmin = tmin;
-//     this->tmax = tmax;
-//   }
-// };
 
 class Scene {
 

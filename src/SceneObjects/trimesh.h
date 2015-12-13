@@ -104,7 +104,6 @@ class TrimeshFace : public MaterialSceneObject
     double v_dot_v;
     double u_dot_v;
     double tri_area;
-    bool zero_area_flag;
 
 public:
     TrimeshFace( Scene *scene, Material *mat, Trimesh *parent, int a, int b, int c) 
@@ -131,7 +130,6 @@ public:
         v_dot_v = v.length2();
         u_dot_v = u * v;
         tri_area = (u_dot_v * u_dot_v) - (u_dot_u * v_dot_v);
-        zero_area_flag = (abs(tri_area) < RAY_EPSILON);
         
         // Compute normal
         if (vab.iszero() || vac.iszero() || vcb.iszero()) degen = true;

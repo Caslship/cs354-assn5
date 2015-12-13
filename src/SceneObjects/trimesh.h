@@ -98,13 +98,13 @@ class TrimeshFace : public MaterialSceneObject
     int ids[3];
     Vec3d normal;
     double dist;
-    // Vec3d u;
-    // Vec3d v;
-    // double u_dot_u;
-    // double v_dot_v;
-    // double u_dot_v;
-    // double tri_area;
-    // bool zero_area_flag;
+    Vec3d u;
+    Vec3d v;
+    double u_dot_u;
+    double v_dot_v;
+    double u_dot_v;
+    double tri_area;
+    bool zero_area_flag;
 
 public:
     TrimeshFace( Scene *scene, Material *mat, Trimesh *parent, int a, int b, int c) 
@@ -125,13 +125,13 @@ public:
         Vec3d vcb = (b_coords - c_coords);
 
         // Precompute constant values for ray-triangle intersection code
-        // u = vab;
-        // v = vac;
-        // u_dot_u = u.length2();
-        // v_dot_v = v.length2();
-        // u_dot_v = u * v;
-        // tri_area = (u_dot_v * u_dot_v) - (u_dot_u * v_dot_v);
-        // zero_area_flag = (abs(tri_area) < RAY_EPSILON);
+        u = vab;
+        v = vac;
+        u_dot_u = u.length2();
+        v_dot_v = v.length2();
+        u_dot_v = u * v;
+        tri_area = (u_dot_v * u_dot_v) - (u_dot_u * v_dot_v);
+        zero_area_flag = (abs(tri_area) < RAY_EPSILON);
         
         // Compute normal
         if (vab.iszero() || vac.iszero() || vcb.iszero()) degen = true;

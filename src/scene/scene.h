@@ -130,12 +130,6 @@ public:
   const BoundingBox& getBoundingBox() const { return bounds; }
   Vec3d getNormal() { return Vec3d(1.0, 0.0, 0.0); }
 
-  virtual std::vector<Geometry *> getFaces() 
-  {
-    std::vector<Geometry *> empty;
-    return empty; 
-  }
-
   virtual void ComputeBoundingBox() {
     // take the object's local bounding box, transform all 8 points on it,
     // and use those to find a new bounding box.
@@ -363,8 +357,107 @@ public:
     }
     else
       return false;
+
+    // Stack-based traversal: http://www.keithlantz.net/2013/04/kd-tree-construction-using-the-surface-area-heuristic-stack-based-traversal-and-the-hyperplane-separation-theorem/
+    // double tmin;
+    // double tmax;
+    // bool intersection_found = false;
+
+    // // Do we even intersect with the node's bounding box?
+    // if (!_bounds.intersect(r, tmin, tmax))
+    //   return false;
+
+    // stack<KDTStackElement<T>> kdt_stack;
+    // KDTStackElement<T> kdt_stack_elem(this, tmin, tmax);
+    // kdt_stack.push(kdt_stack_elem);
+
+    // // Traverse kd-tree and find intersections if we have more nodes to traverse and if we haven't already found an intersection
+    // while(!kdt_stack.empty() && !intersection_found)
+    // {
+    //   kdt_stack_elem = kdt_stack.top();
+    //   kdt_stack.pop();
+    //   KdTree<T> * node = kdt_stack_elem.node;
+    //   tmin = kdt_stack_elem.tmin;
+    //   tmax = kdt_stack_elem.tmax;
+
+    //   // Traverse tree until we hit a leaf
+    //   while (!node->isLeaf())
+    //   {
+    //     // Don't want to make too many method calls
+    //     double pivot = node->getPivot();
+    //     double axis = node->getAxis();
+    //     KdTree<T> * left = node->getLeft();
+    //     KdTree<T> * right = node->getRight();
+
+    //     // Compute split intersection and designate near and far nodes
+    //     double pivot_diff_origin = pivot - r.p[axis];
+    //     double tstar = pivot_diff_origin / r.d[axis];
+    //     bool near_is_left = (pivot_diff_origin >= 0);
+    //     KdTree<T> * near = (near_is_left ? left : right);
+    //     KdTree<T> * far = (near_is_left ? right : left);
+
+    //     // Decide whether we should traverse near, far, or both
+    //     if (tstar >= tmax)
+    //       node = near;
+    //     else if (tstar <= tmin)
+    //       node = far;
+    //     else
+    //     {
+    //       // Push far on stack for later traversal
+    //       kdt_stack_elem.setParams(far, tstar, tmax);
+    //       kdt_stack.push(kdt_stack_elem);
+    //       node = near;
+    //       tmax = tstar;
+    //     }
+    //   }
+
+    //   // At leaf, find intersections with its objects
+    //   vector<T*> * node_objects = node->getObjects();
+    //   int num_node_objects = node_objects->size();
+    //   for (int iter = 0; iter < num_node_objects; ++iter)
+    //   {
+    //     isect cur;
+    //     if ((*node_objects)[iter]->intersect(r, cur))
+    //     {
+    //       if (!intersection_found || (cur.t < i.t))
+    //       {
+    //         i = cur;
+    //         intersection_found = true;
+    //       }
+    //     }
+    //   }
+
+    //   // If we fell outside of the scene boundaries then we obviously haven't hit anything
+    //   if (i.t > tmax)
+    //     intersection_found = false;
+    // }
+
+    // return intersection_found;
   }
 };
+
+// Used for stack-based kd-tree traversal
+// template <class T>
+// struct KDTStackElement
+// {
+//   KdTree<T> * node;
+//   double tmin;
+//   double tmax;
+
+//   KDTStackElement(KdTree<T> * node, double tmin, double tmax)
+//   {
+//     this->node = node;
+//     this->tmin = tmin;
+//     this->tmax = tmax;
+//   }
+
+//   void setParams(KdTree<T> * node, double tmin, double tmax)
+//   {
+//     this->node = node;
+//     this->tmin = tmin;
+//     this->tmax = tmax;
+//   }
+// };
 
 class Scene {
 

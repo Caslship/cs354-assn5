@@ -7,6 +7,8 @@
 
 using namespace std;
 
+extern TraceUI* traceUI;
+
 bool Geometry::intersect(ray& r, isect& i) const {
 	double tmin, tmax;
 	if (hasBoundingBoxCapability() && !(bounds.intersect(r, tmin, tmax))) return false;
@@ -80,7 +82,7 @@ void Scene::buildKdTree()
 bool Scene::intersect(ray& r, isect& i) const {
 
 	bool have_one = false;
-	if (kdtree /* && TraceUI::m_useKdTree */)
+	if (kdtree && traceUI->usingKdTree())
 		have_one = kdtree->intersect(r, i);
 	else
 	{

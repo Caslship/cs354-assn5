@@ -79,6 +79,12 @@ void GraphicalUI::cb_cubeMapCheckButton(Fl_Widget* o, void* v)
 	(pUI->m_usingCubeMap ? pUI->m_filterSlider->activate() : pUI->m_filterSlider->deactivate());
 }
 
+void GraphicalUI::cb_kdCheckButton(Fl_Widget* o, void* v)
+{
+	pUI = (GraphicalUI*)(o->user_data());
+	pUI->m_usingKdTree = ((Fl_Check_Button *)o)->value();
+}
+
 void GraphicalUI::cb_filterWidthSlides(Fl_Widget* o, void* v)
 {
 	((GraphicalUI*)(o->user_data()))->m_nFilterWidth=int( ((Fl_Slider *)o)->value() );
@@ -410,7 +416,7 @@ GraphicalUI::GraphicalUI() : refreshInterval(10) {
 	m_refreshSlider->callback(cb_refreshSlides);
 
 	// set up debugging display checkbox
-	m_debuggingDisplayCheckButton = new Fl_Check_Button(10, 429, 140, 20, "Debugging display");
+	m_debuggingDisplayCheckButton = new Fl_Check_Button(10, 425, 140, 20, "Debugging display");
 	m_debuggingDisplayCheckButton->user_data((void*)(this));
 	m_debuggingDisplayCheckButton->callback(cb_debuggingDisplayCheckButton);
 	m_debuggingDisplayCheckButton->value(m_displayDebuggingInfo);
@@ -429,7 +435,7 @@ GraphicalUI::GraphicalUI() : refreshInterval(10) {
 	m_aaSamplesSlider->callback(cb_aaSamplesSlides);
 
 	// cubemap checkbox
-	m_cubeMapCheckButton = new Fl_Check_Button(10, 400, 100, 20, "Cubemap");
+	m_cubeMapCheckButton = new Fl_Check_Button(10, 400, 140, 20, "Cubemap");
 	m_cubeMapCheckButton->user_data((void*)this);
 	m_cubeMapCheckButton->value(m_usingCubeMap);
 	m_cubeMapCheckButton->callback(cb_cubeMapCheckButton);
@@ -461,6 +467,12 @@ GraphicalUI::GraphicalUI() : refreshInterval(10) {
 	m_multiThreadSlider->value(m_nMultiThreadSqrt);
 	m_multiThreadSlider->align(FL_ALIGN_RIGHT);
 	m_multiThreadSlider->callback(cb_multiThreadSlides);
+
+	// kd-tree checkbox
+	m_kdCheckButton = new Fl_Check_Button(10, 375, 140, 20, "KD-Tree");
+	m_kdCheckButton->user_data((void*)this);
+	m_kdCheckButton->value(m_usingKdTree);
+	m_kdCheckButton->callback(cb_kdCheckButton);
 
 	// cubemap chooser
 	m_cubeMapChooser = new CubeMapChooser();

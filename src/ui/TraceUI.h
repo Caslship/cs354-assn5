@@ -21,7 +21,7 @@ public:
 	TraceUI() : m_nDepth(5), m_nSize(512), m_displayDebuggingInfo(false),
                     m_shadows(true), m_smoothshade(true), raytracer(0),
                     m_nFilterWidth(1), m_usingCubeMap(false), m_gotCubeMap(false),
-                    m_nAASampleSqrt(1), m_nMultiThreadSqrt(2)
+                    m_usingKdTree(true), m_nAASampleSqrt(1), m_nMultiThreadSqrt(2)
                     {}
 
 	virtual int	run() = 0;
@@ -45,6 +45,7 @@ public:
 	bool	smShadSw() const { return m_smoothshade; }
 	bool	usingCubeMap() const { return m_usingCubeMap; }
 	bool	gotCubeMap() const { return m_gotCubeMap; }
+	bool	usingKdTree() const { return m_usingKdTree; }
 
 	static bool m_debug;
 
@@ -64,6 +65,7 @@ protected:
 	bool m_smoothshade;  // turn on/off smoothshading?
 	bool		m_usingCubeMap;  // render with cubemap
 	bool		m_gotCubeMap;  // cubemap defined
+	bool		m_usingKdTree; // Use a kd-tree for intersections
 	int m_nFilterWidth;  // width of cubemap filter
 };
 

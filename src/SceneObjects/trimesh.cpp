@@ -64,7 +64,7 @@ bool Trimesh::intersectLocal(ray& r, isect& i) const
 {
 	bool have_one = false;
 
-    if (kdtree /* && && TraceUI::m_useKdTree */)
+    if (kdtree && traceUI->usingKdTree())
         have_one = kdtree->intersect(r, i);
     else
     {

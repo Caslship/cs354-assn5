@@ -110,6 +110,6 @@ public:
                                 // as in the case where the material was interpolated
 };
 
-const double RAY_EPSILON = 0.00000001;
+const double RAY_EPSILON = 0.0000000000075; // Apparently this has to be adjusted
 
 #endif // __RAY_H__

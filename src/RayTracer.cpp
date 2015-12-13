@@ -1,3 +1,10 @@
+/*
+* Assignment #6
+* Name: Jason Palacios
+* UT EID: jap4839
+* UTCS: jason777
+*/
+
 // The main ray tracer.
 
 #pragma warning (disable: 4786)

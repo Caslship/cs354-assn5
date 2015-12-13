@@ -1,3 +1,10 @@
+/*
+* Assignment #6
+* Name: Jason Palacios
+* UT EID: jap4839
+* UTCS: jason777
+*/
+
 #include <cmath>
 #include <float.h>
 #include <algorithm>
@@ -65,7 +72,7 @@ bool Trimesh::intersectLocal(ray& r, isect& i) const
 	bool have_one = false;
 
     if (kdtree && traceUI->usingKdTree())
-        have_one = kdtree->intersect(r, i);
+        have_one = kdtree->intersect(r, i, have_one);
     else
     {
         double tmin = 0.0;

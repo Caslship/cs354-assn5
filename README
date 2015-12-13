@@ -1,0 +1,29 @@
+/*
+* Assignment #6
+* Name: Jason Palacios
+* UT EID: jap4839
+* UTCS: jason777
+*/
+
+ABOUT
+-----
+This project implements a somewhat functional raytracer.
+
+GRAPHICAL USER INTERFACE
+------------------------
+Aside from the default GUI components, a couple of new things have been added:
+
+-- "AA Sample Factor" slider: This determines the square root of the number of samples to take when supersampling.
+-- "Cubemap Motion Blur Factor" slider: This determines the DoF.
+-- "Multi-Threading Factor" slider: This determines the square root of the number of threads to use to handle raytracing.
+-- "KD-Tree" checkbox: Turn on/off the usage of kd-trees to handle intersection tests.
+-- "Cubemap" checkbox: Turn on/off the usage of the current cubemap when rendering.
+-- "File->Load Cubemap" menu selection: Select and load multiple pictures to serve as a cubemap.
+
+EXTRA CREDIT
+------------
+Please take note of the following when grading:
+
+-- Texture mapping has been implemented.
+-- Depth of field has been added to the cubemap filter.
+-- The program makes use of multiple threads for rendering.

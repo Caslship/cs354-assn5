@@ -1,3 +1,10 @@
+/*
+* Assignment #6
+* Name: Jason Palacios
+* UT EID: jap4839
+* UTCS: jason777
+*/
+
 #include "cubeMap.h"
 #include "ray.h"
 #include "../ui/TraceUI.h"

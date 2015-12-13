@@ -1,3 +1,10 @@
+/*
+* Assignment #6
+* Name: Jason Palacios
+* UT EID: jap4839
+* UTCS: jason777
+*/
+
 #ifndef __RAYTRACER_H__
 #define __RAYTRACER_H__
 

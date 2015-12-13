@@ -1,3 +1,10 @@
+/*
+* Assignment #6
+* Name: Jason Palacios
+* UT EID: jap4839
+* UTCS: jason777
+*/
+
 //
 // scene.h
 //
@@ -252,8 +259,8 @@ public:
     if (num_objects > 0)
     {
       _bounds = objects[0]->getBoundingBox();
-      for (int iter = 1; iter < num_objects; ++iter)
-        _bounds.merge(objects[iter]->getBoundingBox());
+      for (int i = 1; i < num_objects; ++i)
+        _bounds.merge(objects[i]->getBoundingBox());
     }
 
     // Bottom out recursion after a certain amount of objects or a depth has been reached
@@ -269,24 +276,33 @@ public:
     _axis = _bounds.getLongestAxis();
     _pivot = _bounds.getCenter()[_axis];
 
-    for (int iter = 0; iter < num_objects; ++iter)
+    for (int i = 0; i < num_objects; ++i)
     {
       // Using min and max points of the partitioning axis to find which nodes to be placed in
-      double min_wrt_axis = objects[iter]->getBoundingBox().getMin()[_axis];
-      double max_wrt_axis = objects[iter]->getBoundingBox().getMax()[_axis];
+      double center_wrt_axis = objects[i]->getBoundingBox().getCenter()[_axis];
+      // double min_wrt_axis = objects[i]->getBoundingBox().getMin()[_axis];
+      // double max_wrt_axis = objects[i]->getBoundingBox().getMax()[_axis];
+
+      if (center_wrt_axis >= _pivot)
+        right_objects.push_back(objects[i]);
+      else
+        left_objects.push_back(objects[i]);
 
       // If min point is less than pivot then it should obviously be placed int the left node
-      if (min_wrt_axis < _pivot)
-      {
-        left_objects.push_back(objects[iter]);
+      // if (min_wrt_axis < _pivot)
+      // {
+      //   left_objects.push_back(objects[i]);
 
-        // However, the object still has the chance of being in the right node, too, if the max point is at or above the pivot
-        if (max_wrt_axis >= _pivot)
-          right_objects.push_back(objects[iter]);
-      }
-      else
-        right_objects.push_back(objects[iter]);
+      //   // However, the object still has the chance of being in the right node, too, if the max point is at or above the pivot
+      //   if (max_wrt_axis >= _pivot)
+      //     right_objects.push_back(objects[i]);
+      // }
+      // else
+      //   right_objects.push_back(objects[i]);
     }
+
+    if (left_objects.empty() && !right_objects.empty()) left_objects = right_objects;
+    if (right_objects.empty() && !left_objects.empty()) right_objects = left_objects;
 
     // Add another depth level
     _left = new KdTree<T>(left_objects, depth + 1);
@@ -310,7 +326,7 @@ public:
   KdTree<T> * getLeft() { return _left; }
   KdTree<T> * getRight() { return _right; }
 
-  bool intersect(ray& r, isect& i)
+  bool intersect(ray& r, isect& i, bool& have_one)
   {
     double tmin;
     double tmax;
@@ -321,29 +337,28 @@ public:
       // Recurse down tree until we hit leaf nodes
       if (!isLeaf())
       {
-        bool intersected_left_node = _left->intersect(r, i);
-        bool intersected_right_node = _right->intersect(r, i);
+        bool intersected_left_node = _left->intersect(r, i, have_one);
+        bool intersected_right_node = _right->intersect(r, i, have_one);
 
         return (intersected_left_node || intersected_right_node);
       }
       else
       {
         // See if we intersect any contained in leaf nodes
-        bool intersection_found = false;
         int num_objects = _objects->size();
         for(int j = 0; j != num_objects; ++j) 
         {
           isect cur;
           if((*_objects)[j]->intersect(r, cur)) 
           {
-            if(!intersection_found || (cur.t < i.t)) 
+            if(!have_one || (cur.t < i.t)) 
             {
               i = cur;
-              intersection_found = true;
+              have_one = true;
             }
           }
         }
-        return intersection_found;
+        return have_one;
       }
     }
     else

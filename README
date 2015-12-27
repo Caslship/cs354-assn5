@@ -7,7 +7,8 @@
 
 ABOUT
 -----
-This project implements a somewhat functional raytracer.
+This project implements a somewhat functional raytracer; it is the final project for the CS 354 Fall 2015 Graphics class at
+the University of Texas at Austin. In a class of about 50 or more students, this implementation placed 2nd in a rendering speed test.
 
 GRAPHICAL USER INTERFACE
 ------------------------
@@ -27,3 +28,8 @@ Please take note of the following when grading:
 -- Texture mapping has been implemented.
 -- Depth of field has been added to the cubemap filter.
 -- The program makes use of multiple threads for rendering.
+
+DISCLAIMER
+----------
+I do not condone cheating. This project is available online to serve as a reference for both potential employers and 
+anyone else who is curious.
